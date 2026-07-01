@@ -79,6 +79,9 @@ function HeroTimerCard() {
           <source src="/images/timer-bg.mp4" type="video/mp4" />
         </video>
 
+        {/* Color overlay #74856E 30% */}
+        <div className="absolute inset-0" style={{ background: 'rgba(116, 133, 110, 0.3)' }} />
+
         {/* Sound button — top left */}
         <div
           className="absolute flex items-center gap-[6px] rounded-[3.7px] px-2 py-1"
