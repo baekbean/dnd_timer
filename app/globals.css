@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Aspekta';
+  src: url('/fonts/Aspekta-700.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'DIN Condensed';
+  src: url('/fonts/D-DIN-Condensed-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-aspekta: 'Aspekta', sans-serif;
+  --font-din-condensed: 'DIN Condensed', sans-serif;
+  --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-dm: 'DM Sans', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #F6F6F3;
+  color: #343434;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
