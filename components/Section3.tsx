@@ -22,7 +22,7 @@ export default function Section3() {
       {/* Title */}
       <div className="flex flex-col gap-4 items-center text-center text-[#343434]">
         <h2 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3]">
-          Ready to Do not disturb?<br />
+          Ready for do not disturb?<br />
           Be the first to try
         </h2>
         <p className="font-pretendard text-[16px] tracking-[-0.08px] leading-[1.4] w-full md:w-[448px]">
@@ -49,22 +49,6 @@ export default function Section3() {
           Join Waitlist
         </button>
       </form>
-
-      {/* macOS-style Do Not Disturb notification mockup */}
-      <div className="flex items-center gap-4 bg-[rgba(255,255,255,0.4)] px-5 py-5 rounded-full">
-        <div className="w-[60px] h-[60px] flex items-center justify-center flex-shrink-0">
-          <Image src="/images/icon-moon.svg" alt="" width={32} height={32} />
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="font-inter font-bold text-[24px] text-black tracking-[-0.5px] whitespace-nowrap leading-tight">
-            Do Not Disturb
-          </p>
-          <p className="font-inter text-[20px] text-[#7d5ec0] leading-tight">on</p>
-        </div>
-        <div className="w-[72px] h-[72px] flex items-center justify-center flex-shrink-0">
-          <Image src="/images/icon-dots.svg" alt="" width={43} height={43} />
-        </div>
-      </div>
     </section>
   )
 }

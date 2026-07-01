@@ -1,19 +1,25 @@
+import Image from 'next/image'
+
 const features = [
   {
     title: 'Study',
     description: 'Long sessions that deserve atmosphere.',
+    image: '/images/feature-study.png',
   },
   {
     title: 'Deep work',
-    description: 'Uninterrupted focus, beautifully framed.',
+    description: 'When distractions keep pulling you away.',
+    image: '/images/feature-deepwork.png',
   },
   {
-    title: 'Creative sessions',
-    description: 'When your screen should match your headspace.',
+    title: 'Create',
+    description: 'When ideas need room to breathe.',
+    image: '/images/feature-create.png',
   },
   {
-    title: 'Desk setups',
-    description: 'It belongs on your desk like any other object.',
+    title: 'Read',
+    description: 'Quiet moments that belong on your desk.',
+    image: '/images/feature-read.png',
   },
 ]
 
@@ -23,13 +29,12 @@ export default function Section2() {
       {/* Title */}
       <div className="flex flex-col gap-4 items-center text-center px-4">
         <h2 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3] text-[#343434]">
-          for people who<br />
-          romanticize productivity.
+          Distraction has<br />
+          become the default.
         </h2>
         <p className="font-pretendard text-[16px] text-[#343434] tracking-[-0.08px] leading-[1.4] w-full md:w-[448px]">
-          It&apos;s getting harder to protect our attention.<br className="hidden md:block" />
-          Notifications, endless feeds, and constant stimulation compete for it every day.<br className="hidden md:block" />
-          We&apos;re building a space for people who want it back.
+          Notifications, endless feeds, and constant stimulation compete for our attention every day.<br className="hidden md:block" />
+          We&apos;re building a space to help you take it back.
         </p>
       </div>
 
@@ -38,10 +43,12 @@ export default function Section2() {
         {features.map((feature) => (
           <div key={feature.title} className="flex flex-col gap-6">
             <div className="w-full h-[300px] rounded-lg overflow-hidden relative bg-[#D9D9D9]">
-              <img
-                src="/images/feature-placeholder.jpg"
-                alt=""
-                className="w-full h-full object-cover"
+              <Image
+                src={feature.image}
+                alt={feature.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) calc(100vw - 32px), 246px"
               />
             </div>
             <div className="flex flex-col gap-4">

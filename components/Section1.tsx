@@ -20,8 +20,7 @@ export default function Section1() {
             your workspace.
           </h2>
           <p className="font-pretendard text-[16px] text-[#343434] tracking-[-0.08px] leading-[1.4] w-full md:w-[448px]">
-            Whether you&apos;re studying, writing, creating, or working from home<br className="hidden md:block" />
-            your screen deserves to feel intentional.
+            Whether you&apos;re studying, writing, creating, or working from home, make your screen a place you want to return to.
           </p>
         </div>
 
