@@ -12,8 +12,25 @@ declare global {
 }
 
 function gtagEvent(name: string, params: Record<string, unknown>) {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
-  window.gtag('event', name, { page_path: window.location.pathname, ...params })
+  if (typeof window === 'undefined') return
+
+  const payload = { page_path: window.location.pathname, ...params }
+
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', name, payload)
+    return
+  }
+
+  // gtag not ready yet (afterInteractive race) — retry every 250ms, up to 5s
+  let attempts = 0
+  const timer = setInterval(() => {
+    if (typeof window.gtag === 'function') {
+      clearInterval(timer)
+      window.gtag('event', name, payload)
+    } else if (++attempts >= 20) {
+      clearInterval(timer)
+    }
+  }, 250)
 }
 
 // ── waitlist_click ──────────────────────────────────────────────
