@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { track } from '@vercel/analytics'
 import { buildFormUrl } from '@/lib/constants'
+import { trackWaitlistClick } from '@/lib/ga'
 
 const TOTAL_SECONDS = 25 * 60
 
@@ -178,6 +179,7 @@ export default function Hero() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     track('join_waitlist', { location: 'hero', email })
+    trackWaitlistClick({ button_location: 'hero', button_text: 'Join waitlist' })
     const url = buildFormUrl(email)
     if (url !== '#') {
       window.open(url, '_blank', 'noopener,noreferrer')

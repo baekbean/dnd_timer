@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { track } from '@vercel/analytics'
 import { buildFormUrl } from '@/lib/constants'
+import { trackWaitlistClick } from '@/lib/ga'
 
 export default function Section3() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,7 @@ export default function Section3() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     track('join_waitlist', { location: 'cta', email })
+    trackWaitlistClick({ button_location: 'cta', button_text: 'Join Waitlist' })
     const url = buildFormUrl(email)
     if (url !== '#') {
       window.open(url, '_blank', 'noopener,noreferrer')

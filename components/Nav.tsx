@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { track } from '@vercel/analytics'
 import { GOOGLE_FORM_BASE_URL } from '@/lib/constants'
+import { trackWaitlistClick } from '@/lib/ga'
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
@@ -33,7 +34,10 @@ export default function Nav() {
           href={GOOGLE_FORM_BASE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={() => track('join_waitlist', { location: 'nav' })}
+          onClick={() => {
+            track('join_waitlist', { location: 'nav' })
+            trackWaitlistClick({ button_location: 'nav', button_text: 'Join waitlist' })
+          }}
           className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[22px] py-[14px] rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
         >
           Join waitlist
