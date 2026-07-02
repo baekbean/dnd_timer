@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { track } from '@vercel/analytics'
 import { buildFormUrl } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
+import SectionTracker from '@/components/SectionTracker'
 
 export default function Section3() {
   const [email, setEmail] = useState('')
@@ -21,6 +22,7 @@ export default function Section3() {
 
   return (
     <section className="w-full flex flex-col gap-[40px] items-center pb-[200px] px-4 md:px-0">
+      <SectionTracker sectionName="cta" />
       {/* Title */}
       <div className="flex flex-col gap-4 items-center text-center text-[#343434]">
         <h2 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3]">

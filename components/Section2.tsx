@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import SectionTracker from '@/components/SectionTracker'
 
 const features = [
   {
@@ -26,6 +27,7 @@ const features = [
 export default function Section2() {
   return (
     <section className="w-full flex flex-col gap-[40px] items-center pb-[200px]">
+      <SectionTracker sectionName="features" />
       {/* Title */}
       <div className="flex flex-col gap-4 items-center text-center px-4">
         <h2 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3] text-[#343434]">

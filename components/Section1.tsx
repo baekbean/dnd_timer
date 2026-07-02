@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import SectionTracker from '@/components/SectionTracker'
 
 const images = [
   { src: '/images/ws-1.jpg', alt: 'Cozy desk with plants and books' },
@@ -12,6 +13,7 @@ const images = [
 export default function Section1() {
   return (
     <section className="w-full flex flex-col items-center pb-[200px]">
+      <SectionTracker sectionName="workspace_images" />
       <div className="w-full max-w-[908px] px-4 md:px-0 flex flex-col gap-[60px]">
         {/* Title */}
         <div className="flex flex-col gap-4 items-center text-center">

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { track } from '@vercel/analytics'
 import { buildFormUrl } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
+import SectionTracker from '@/components/SectionTracker'
 
 const TOTAL_SECONDS = 25 * 60
 
@@ -188,6 +189,7 @@ export default function Hero() {
 
   return (
     <section className="relative w-full overflow-hidden bg-[#F6F6F3]">
+      <SectionTracker sectionName="hero" />
       {/* Background image — no gradient, clipped at 442px (Figma spec) */}
       <div className="absolute top-0 left-0 w-full h-[442px] pointer-events-none overflow-hidden">
         <Image
