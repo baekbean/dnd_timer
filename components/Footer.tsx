@@ -1,6 +1,10 @@
 import Image from 'next/image'
 
-const socialLinks = ['X', 'Threads', 'TikTok', 'Instagram', 'Mail']
+const socialLinks = [
+  { label: 'TikTok', href: 'https://www.tiktok.com/@dndtimer' },
+  { label: 'Instagram', href: 'https://www.instagram.com/dndtimer' },
+  { label: 'Mail', href: 'mailto:hello.dndroom@gmail.com' },
+]
 
 export default function Footer() {
   return (
@@ -33,9 +37,14 @@ export default function Footer() {
         {/* Social links */}
         <div className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4] w-[336px] text-right">
           {socialLinks.map((link, i) => (
-            <span key={link}>
-              <a href="#" className="hover:underline transition-opacity hover:opacity-60">
-                {link}
+            <span key={link.label}>
+              <a
+                href={link.href}
+                target={link.href.startsWith('http') ? '_blank' : undefined}
+                rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                className="hover:underline transition-opacity hover:opacity-60"
+              >
+                {link.label}
               </a>
               {i < socialLinks.length - 1 && (
                 <span className="mx-2">·</span>

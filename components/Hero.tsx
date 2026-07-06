@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { track } from '@vercel/analytics'
-import { buildFormUrl } from '@/lib/constants'
+import { buildFormUrl, submitEmailSilently } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
 import SectionTracker from '@/components/SectionTracker'
 
@@ -78,6 +78,7 @@ function HeroTimerCard() {
           loop
           playsInline
         >
+          <source src="/images/timer-bg.webm" type="video/webm" />
           <source src="/images/timer-bg.mp4" type="video/mp4" />
         </video>
 
@@ -181,6 +182,7 @@ export default function Hero() {
     e.preventDefault()
     track('join_waitlist', { location: 'hero', email })
     trackWaitlistClick({ button_location: 'hero', button_text: 'Join waitlist' })
+    submitEmailSilently(email)
     const url = buildFormUrl(email)
     if (url !== '#') {
       window.open(url, '_blank', 'noopener,noreferrer')

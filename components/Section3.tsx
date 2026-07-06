@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { track } from '@vercel/analytics'
-import { buildFormUrl } from '@/lib/constants'
+import { buildFormUrl, submitEmailSilently } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
 import SectionTracker from '@/components/SectionTracker'
 
@@ -14,6 +14,7 @@ export default function Section3() {
     e.preventDefault()
     track('join_waitlist', { location: 'cta', email })
     trackWaitlistClick({ button_location: 'cta', button_text: 'Join Waitlist' })
+    submitEmailSilently(email)
     const url = buildFormUrl(email)
     if (url !== '#') {
       window.open(url, '_blank', 'noopener,noreferrer')
