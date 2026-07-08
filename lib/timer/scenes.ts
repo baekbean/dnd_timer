@@ -37,6 +37,19 @@ export const SCENES: Scene[] = [
     overlay: 'rgba(116, 133, 110, 0.3)',
     ambient: { kind: 'noise' },
   },
+  {
+    // Dummy alternates — gradient-only until real scene assets are produced
+    id: 'dusk',
+    name: 'Dusk',
+    fallbackGradient: 'linear-gradient(160deg, #46536b 0%, #6b7a8f 55%, #93a3b5 100%)',
+    ambient: { kind: 'noise' },
+  },
+  {
+    id: 'night',
+    name: 'Night',
+    fallbackGradient: 'linear-gradient(160deg, #22233a 0%, #3a3a5c 55%, #50507a 100%)',
+    ambient: { kind: 'noise' },
+  },
 ]
 
 export const DEFAULT_SCENE_ID = SCENES[0].id

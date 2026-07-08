@@ -12,6 +12,7 @@ export interface TimerSettings {
   sessionsUntilLongBreak: number
   autoStartBreaks: boolean
   autoStartFocus: boolean
+  notifyOnComplete: boolean
 }
 
 export const DEFAULT_SETTINGS: TimerSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: TimerSettings = {
   sessionsUntilLongBreak: 4,
   autoStartBreaks: true,
   autoStartFocus: false,
+  notifyOnComplete: false,
 }
 
 interface DailyLog {
@@ -43,6 +45,10 @@ interface TimerState {
   soundOn: boolean
   /** 0–1 */
   volume: number
+  /** Bumped on every natural phase completion — UI watches this for chime/notification. */
+  completions: number
+  /** True right after a focus session completes naturally — drives the Complete screen. */
+  justCompletedFocus: boolean
 
   start: () => void
   pause: () => void
@@ -53,6 +59,7 @@ interface TimerState {
   setScene: (sceneId: string) => void
   setSoundOn: (on: boolean) => void
   setVolume: (volume: number) => void
+  dismissComplete: () => void
   /** Reconcile persisted state with the wall clock after rehydration. */
   syncAfterLoad: () => void
 }
@@ -119,6 +126,8 @@ export const useTimerStore = create<TimerState>()(
       sceneId: DEFAULT_SCENE_ID,
       soundOn: true,
       volume: 0.6,
+      completions: 0,
+      justCompletedFocus: false,
 
       start: () => {
         const s = get()
@@ -179,6 +188,8 @@ export const useTimerStore = create<TimerState>()(
           // Chain from the scheduled end, not from now, so no time is lost
           endAt: adv.autoStart ? s.endAt + duration : null,
           remainingMs: duration,
+          completions: s.completions + 1,
+          justCompletedFocus: s.phase === 'focus' ? true : s.justCompletedFocus,
         })
       },
 
@@ -194,6 +205,7 @@ export const useTimerStore = create<TimerState>()(
       setScene: (sceneId) => set({ sceneId }),
       setSoundOn: (soundOn) => set({ soundOn }),
       setVolume: (volume) => set({ volume: Math.min(1, Math.max(0, volume)) }),
+      dismissComplete: () => set({ justCompletedFocus: false }),
 
       syncAfterLoad: () => {
         const s = get()
@@ -232,6 +244,10 @@ export const useTimerStore = create<TimerState>()(
           endAt,
           remainingMs,
           daily: { ...daily, completedSessions: completed },
+          // New settings keys get defaults when rehydrating an older persisted shape
+          settings: { ...DEFAULT_SETTINGS, ...s.settings },
+          // Never resurface a stale Complete screen after a reload
+          justCompletedFocus: false,
         })
       },
     }),

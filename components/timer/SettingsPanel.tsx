@@ -160,6 +160,17 @@ export default function SettingsPanel({ onClose }: Props) {
             checked={settings.autoStartFocus}
             onChange={(v) => set({ autoStartFocus: v })}
           />
+          <ToggleField
+            label="Notify when session ends"
+            checked={settings.notifyOnComplete}
+            onChange={async (v) => {
+              if (v && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                const result = await Notification.requestPermission()
+                if (result !== 'granted') return
+              }
+              set({ notifyOnComplete: v })
+            }}
+          />
         </div>
       </div>
     </div>

@@ -2,12 +2,15 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { useTimerStore, type Phase, type TimerStatus } from '@/lib/timer/store'
+import { useTimerStore, type Phase } from '@/lib/timer/store'
 import { getScene } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
+import { useIdleHide } from '@/lib/timer/useIdleHide'
 import SceneBackground from '@/components/timer/SceneBackground'
 import SettingsPanel from '@/components/timer/SettingsPanel'
+import ScenePicker from '@/components/timer/ScenePicker'
+import CompleteOverlay from '@/components/timer/CompleteOverlay'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
@@ -141,10 +144,21 @@ export default function TimerApp() {
   const skip = useTimerStore((s) => s.skip)
   const tick = useTimerStore((s) => s.tick)
   const setSoundOn = useTimerStore((s) => s.setSoundOn)
+  const settings = useTimerStore((s) => s.settings)
+  const completions = useTimerStore((s) => s.completions)
+  const justCompletedFocus = useTimerStore((s) => s.justCompletedFocus)
+  const dismissComplete = useTimerStore((s) => s.dismissComplete)
+  const sessionsToday = useTimerStore((s) => s.daily.completedSessions)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
+
+  // Chrome fades away while a session runs untouched — camera-ready screen
+  const chromeHidden = useIdleHide(status === 'running' && !settingsOpen && !justCompletedFocus)
+  const chromeClass = `transition-opacity duration-700 ${
+    chromeHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
+  }`
 
   // Rehydrate persisted state on the client, then reconcile with the wall clock
   useEffect(() => {
@@ -174,44 +188,78 @@ export default function TimerApp() {
     soundEngine.setVolume(volume)
   }, [volume])
 
-  // Chime when a phase ends while running (natural completion or skip)
-  const prevRef = useRef<{ phase: Phase; status: TimerStatus } | null>(null)
+  // Natural completion → chime + (optional) notification. First run only records
+  // the baseline so offline-replayed completions don't fire on load.
+  const prevCompletionsRef = useRef<number | null>(null)
   useEffect(() => {
-    const prev = prevRef.current
-    if (prev && prev.phase !== phase && prev.status === 'running' && soundOn) {
-      soundEngine.playChime()
+    const prev = prevCompletionsRef.current
+    prevCompletionsRef.current = completions
+    if (prev === null || completions <= prev) return
+
+    if (soundOn) soundEngine.playChime()
+
+    if (
+      settings.notifyOnComplete &&
+      typeof Notification !== 'undefined' &&
+      Notification.permission === 'granted' &&
+      document.visibilityState !== 'visible'
+    ) {
+      const body =
+        phase === 'focus'
+          ? 'Break is over — ready to focus.'
+          : 'Focus session complete — time for a break.'
+      try {
+        new Notification('Do Not Disturb Timer', { body })
+      } catch {}
     }
-    prevRef.current = { phase, status }
-  }, [phase, status, soundOn])
+  }, [completions, soundOn, settings.notifyOnComplete, phase])
 
   const phaseLabel =
     phase === 'focus' ? `Focus / Session ${cyclePos + 1}` : PHASE_LABEL[phase]
 
+  // Countdown in the tab title while the tab is in the background
+  const timeText = formatTime(remainingMs)
+  useEffect(() => {
+    if (status === 'running' || status === 'paused') {
+      document.title = `${timeText} · ${PHASE_LABEL[phase]} — Do Not Disturb Timer`
+    } else {
+      document.title = 'Do Not Disturb Timer'
+    }
+    return () => {
+      document.title = 'Do Not Disturb Timer'
+    }
+  }, [timeText, status, phase])
+
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden">
+    <main
+      className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden"
+      style={{ cursor: chromeHidden ? 'none' : 'auto' }}
+    >
       <SceneBackground scene={scene} />
 
       {/* Sound — top left, hero-mockup pill */}
-      <button
-        type="button"
-        aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
-        aria-pressed={soundOn}
-        onClick={() => setSoundOn(!soundOn)}
-        className="absolute left-6 top-6 flex items-center gap-2 rounded-md px-3 py-2 transition-opacity hover:opacity-90"
-        style={{
-          background: 'rgba(44,44,44,0.4)',
-          border: '0.5px solid rgba(44,44,44,0.2)',
-          opacity: soundOn ? 1 : 0.55,
-        }}
-      >
-        <Image src="/images/speaker-icon.svg" alt="" width={14} height={12} />
-        <span className="text-[13px] leading-none text-[#f5f5f5]">
-          {soundOn ? 'Sound' : 'Muted'}
-        </span>
-      </button>
+      <div className={`absolute left-6 top-6 ${chromeClass}`}>
+        <button
+          type="button"
+          aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
+          aria-pressed={soundOn}
+          onClick={() => setSoundOn(!soundOn)}
+          className="flex items-center gap-2 rounded-md px-3 py-2 transition-opacity hover:opacity-90"
+          style={{
+            background: 'rgba(44,44,44,0.4)',
+            border: '0.5px solid rgba(44,44,44,0.2)',
+            opacity: soundOn ? 1 : 0.55,
+          }}
+        >
+          <Image src="/images/speaker-icon.svg" alt="" width={14} height={12} />
+          <span className="text-[13px] leading-none text-[#f5f5f5]">
+            {soundOn ? 'Sound' : 'Muted'}
+          </span>
+        </button>
+      </div>
 
       {/* Fullscreen + settings — top right */}
-      <div className="absolute right-6 top-6 flex items-center gap-3">
+      <div className={`absolute right-6 top-6 flex items-center gap-3 ${chromeClass}`}>
         <button
           type="button"
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
@@ -246,10 +294,10 @@ export default function TimerApp() {
             fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {formatTime(remainingMs)}
+          {timeText}
         </span>
 
-        <div className="flex items-center justify-center gap-8 md:gap-10">
+        <div className={`flex items-center justify-center gap-8 md:gap-10 ${chromeClass}`}>
           <button
             type="button"
             aria-label="Reset"
@@ -280,7 +328,15 @@ export default function TimerApp() {
         </div>
       </div>
 
+      {/* Scene picker — bottom center */}
+      <div className={`absolute bottom-6 ${chromeClass}`}>
+        <ScenePicker />
+      </div>
+
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {justCompletedFocus && (
+        <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
+      )}
     </main>
   )
 }
