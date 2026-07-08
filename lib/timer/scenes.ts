@@ -16,6 +16,8 @@ export interface Scene {
     mp4?: string
     poster?: string
   }
+  /** Static background image, used when there's no video for the scene. */
+  backgroundImage?: string
   /** Shown behind/instead of video while it loads or if it fails. */
   fallbackGradient: string
   /** Color wash over the video, matching the landing hero treatment. */
@@ -38,15 +40,16 @@ export const SCENES: Scene[] = [
     ambient: { kind: 'noise' },
   },
   {
-    // Dummy alternates — gradient-only until real scene assets are produced
     id: 'dusk',
     name: 'Dusk',
+    backgroundImage: '/images/scene-dusk.png',
     fallbackGradient: 'linear-gradient(160deg, #46536b 0%, #6b7a8f 55%, #93a3b5 100%)',
     ambient: { kind: 'noise' },
   },
   {
     id: 'night',
     name: 'Night',
+    backgroundImage: '/images/scene-night.png',
     fallbackGradient: 'linear-gradient(160deg, #22233a 0%, #3a3a5c 55%, #50507a 100%)',
     ambient: { kind: 'noise' },
   },
