@@ -116,8 +116,10 @@ function HeroTimerCard() {
             Focus / Session 1
           </p>
 
+          {/* DIN Condensed has no tabular figures, so the colon is the layout anchor:
+              minutes grow leftward, seconds grow rightward, colon never moves */}
           <span
-            className="leading-none text-[#f6f6f3] lowercase"
+            className="relative leading-none text-[#f6f6f3] lowercase"
             style={{
               fontFamily: "'DIN Condensed', sans-serif",
               fontWeight: 700,
@@ -125,7 +127,13 @@ function HeroTimerCard() {
               letterSpacing: '-0.02em',
             }}
           >
-            {formatTime(remaining)}
+            :
+            <span className="absolute right-full top-0 whitespace-nowrap">
+              {formatTime(remaining).split(':')[0]}
+            </span>
+            <span className="absolute left-full top-0 whitespace-nowrap">
+              {formatTime(remaining).split(':')[1]}
+            </span>
           </span>
 
           <div
