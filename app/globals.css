@@ -40,3 +40,13 @@ body {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* Fullscreen letterboxing (e.g. iPadOS when the element's aspect ratio doesn't
+   match the screen) is painted by the browser behind the fullscreen element —
+   default is white, so pin it to black for the timer's dark scenes. */
+:fullscreen,
+:fullscreen::backdrop,
+:-webkit-full-screen,
+:-webkit-full-screen::backdrop {
+  background-color: #000;
+}

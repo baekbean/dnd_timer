@@ -195,13 +195,18 @@ export default function TimerApp() {
   // Keep the screen awake while a session is running
   useWakeLock(status === 'running')
 
-  // Ambient sound follows the running state
+  // Ambient sound follows the running state. Keyed on the ambient's own identity
+  // (not sceneId) so switching between scenes that share the same ambient track
+  // doesn't restart playback.
+  const ambient = scene.ambient
+  const ambientKey = ambient.kind === 'file' ? `file:${ambient.src}` : 'noise'
   useEffect(() => {
     if (status === 'running' && soundOn) {
       soundEngine.startAmbient(getScene(sceneId))
       return () => soundEngine.stopAmbient()
     }
-  }, [status, soundOn, sceneId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, soundOn, ambientKey])
 
   useEffect(() => {
     soundEngine.setVolume(volume)
@@ -336,7 +341,32 @@ export default function TimerApp() {
 
       {/* Timer */}
       <div className="flex flex-col items-center gap-6 md:gap-10">
-        <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
+          {settings.sessionsUntilLongBreak > 1 && (
+            <div
+              className="flex items-center gap-[6px]"
+              role="img"
+              aria-label={`Session ${Math.min(cyclePos + 1, settings.sessionsUntilLongBreak)} of ${settings.sessionsUntilLongBreak} before long break`}
+            >
+              {Array.from({ length: settings.sessionsUntilLongBreak }).map((_, i) => (
+                <span key={i} className="flex items-center gap-[6px]" aria-hidden="true">
+                  {i > 0 && (
+                    <span className="h-px w-[3px]" style={{ background: '#f6f6f3', opacity: 0.3 }} />
+                  )}
+                  <span
+                    className="block h-[7px] w-[7px] rounded-full"
+                    style={
+                      i < cyclePos
+                        ? { background: '#f6f6f3' }
+                        : { border: '1px solid #f6f6f3', opacity: 0.45 }
+                    }
+                  />
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* DIN Condensed has no tabular figures, so the colon is the layout anchor:
             minutes grow leftward, seconds rightward, colon never moves */}
@@ -358,7 +388,7 @@ export default function TimerApp() {
           </span>
         </span>
 
-        <div className={`flex items-center justify-center gap-8 md:gap-10 ${chromeClass}`}>
+        <div className="flex items-center justify-center gap-8 md:gap-10">
           <button
             type="button"
             aria-label="Reset"

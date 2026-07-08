@@ -7,12 +7,16 @@ export default function SceneBackground({ scene }: { scene: Scene }) {
     <div className="absolute inset-0 -z-10 overflow-hidden bg-black">
       <div
         className="absolute overflow-hidden"
-        style={{ inset: 24, borderRadius: 200, background: scene.fallbackGradient }}
+        style={{
+          inset: 'clamp(12px, 3vw, 24px)',
+          borderRadius: 'clamp(24px, 10vw, 200px)',
+          background: scene.fallbackGradient,
+        }}
       >
         {scene.video && (
           <video
             key={scene.id}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-fill"
             autoPlay
             muted
             loop
@@ -30,7 +34,7 @@ export default function SceneBackground({ scene }: { scene: Scene }) {
             key={scene.id}
             src={scene.backgroundImage}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-fill"
           />
         )}
         {scene.overlay && <div className="absolute inset-0" style={{ background: scene.overlay }} />}
