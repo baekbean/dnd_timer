@@ -54,3 +54,27 @@ export type SectionName = 'hero' | 'features' | 'workspace_images' | 'cta'
 export function trackSectionView(section_name: SectionName) {
   gtagEvent('section_view', { section_name })
 }
+
+// ── timer product events (see PLAN.md success metrics) ──────────
+type TimerPhase = 'focus' | 'shortBreak' | 'longBreak'
+
+export function trackTimerStart(params: { phase: TimerPhase; scene_id: string }) {
+  gtagEvent('timer_start', params)
+}
+
+export function trackSessionComplete(params: { completed_phase: TimerPhase; sessions_today: number }) {
+  gtagEvent('session_complete', params)
+}
+
+/** A running/paused focus session was cut short by reset or skip. */
+export function trackSessionAbandon(params: { via: 'reset' | 'skip'; remaining_ms: number }) {
+  gtagEvent('session_abandon', params)
+}
+
+export function trackSceneChange(params: { scene_id: string }) {
+  gtagEvent('scene_change', params)
+}
+
+export function trackFullscreenEnter() {
+  gtagEvent('fullscreen_enter', {})
+}

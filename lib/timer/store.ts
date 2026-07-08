@@ -47,6 +47,8 @@ interface TimerState {
   volume: number
   /** Bumped on every natural phase completion — UI watches this for chime/notification. */
   completions: number
+  /** Phase that finished at the last natural completion. */
+  lastCompletedPhase: Phase | null
   /** True right after a focus session completes naturally — drives the Complete screen. */
   justCompletedFocus: boolean
 
@@ -127,6 +129,7 @@ export const useTimerStore = create<TimerState>()(
       soundOn: true,
       volume: 0.6,
       completions: 0,
+      lastCompletedPhase: null,
       justCompletedFocus: false,
 
       start: () => {
@@ -189,6 +192,7 @@ export const useTimerStore = create<TimerState>()(
           endAt: adv.autoStart ? s.endAt + duration : null,
           remainingMs: duration,
           completions: s.completions + 1,
+          lastCompletedPhase: s.phase,
           justCompletedFocus: s.phase === 'focus' ? true : s.justCompletedFocus,
         })
       },

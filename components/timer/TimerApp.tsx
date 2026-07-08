@@ -3,6 +3,12 @@
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { useTimerStore, type Phase } from '@/lib/timer/store'
+import {
+  trackTimerStart,
+  trackSessionComplete,
+  trackSessionAbandon,
+  trackFullscreenEnter,
+} from '@/lib/ga'
 import { getScene } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
@@ -146,6 +152,7 @@ export default function TimerApp() {
   const setSoundOn = useTimerStore((s) => s.setSoundOn)
   const settings = useTimerStore((s) => s.settings)
   const completions = useTimerStore((s) => s.completions)
+  const lastCompletedPhase = useTimerStore((s) => s.lastCompletedPhase)
   const justCompletedFocus = useTimerStore((s) => s.justCompletedFocus)
   const dismissComplete = useTimerStore((s) => s.dismissComplete)
   const sessionsToday = useTimerStore((s) => s.daily.completedSessions)
@@ -164,6 +171,18 @@ export default function TimerApp() {
   useEffect(() => {
     useTimerStore.persist.rehydrate()
     useTimerStore.getState().syncAfterLoad()
+  }, [])
+
+  // If ambient started while the AudioContext was suspended (reload mid-session),
+  // the first gesture unlocks it
+  useEffect(() => {
+    const unlock = () => soundEngine.resume()
+    window.addEventListener('pointerdown', unlock, { once: true })
+    window.addEventListener('keydown', unlock, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
   }, [])
 
   // Ticker — the store computes remaining time from endAt, so drift-free
@@ -196,6 +215,11 @@ export default function TimerApp() {
     prevCompletionsRef.current = completions
     if (prev === null || completions <= prev) return
 
+    trackSessionComplete({
+      completed_phase: lastCompletedPhase ?? 'focus',
+      sessions_today: useTimerStore.getState().daily.completedSessions,
+    })
+
     if (soundOn) soundEngine.playChime()
 
     if (
@@ -212,7 +236,37 @@ export default function TimerApp() {
         new Notification('Do Not Disturb Timer', { body })
       } catch {}
     }
-  }, [completions, soundOn, settings.notifyOnComplete, phase])
+  }, [completions, lastCompletedPhase, soundOn, settings.notifyOnComplete, phase])
+
+  const handleStartPause = () => {
+    if (status === 'running') {
+      pause()
+    } else {
+      trackTimerStart({ phase, scene_id: sceneId })
+      start()
+    }
+  }
+
+  const abandonIfMidFocus = (via: 'reset' | 'skip') => {
+    if (phase === 'focus' && status !== 'idle') {
+      trackSessionAbandon({ via, remaining_ms: remainingMs })
+    }
+  }
+
+  const handleReset = () => {
+    abandonIfMidFocus('reset')
+    reset()
+  }
+
+  const handleSkip = () => {
+    abandonIfMidFocus('skip')
+    skip()
+  }
+
+  const handleFullscreen = () => {
+    if (!isFullscreen) trackFullscreenEnter()
+    toggleFullscreen()
+  }
 
   const phaseLabel =
     phase === 'focus' ? `Focus / Session ${cyclePos + 1}` : PHASE_LABEL[phase]
@@ -263,7 +317,7 @@ export default function TimerApp() {
         <button
           type="button"
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          onClick={toggleFullscreen}
+          onClick={handleFullscreen}
           className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
           style={{ background: 'rgba(44,44,44,0.25)' }}
         >
@@ -301,7 +355,7 @@ export default function TimerApp() {
           <button
             type="button"
             aria-label="Reset"
-            onClick={reset}
+            onClick={handleReset}
             className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
             style={{ background: 'rgba(246,246,243,0.4)' }}
           >
@@ -310,7 +364,7 @@ export default function TimerApp() {
           <button
             type="button"
             aria-label={status === 'running' ? 'Pause' : 'Start'}
-            onClick={status === 'running' ? pause : start}
+            onClick={handleStartPause}
             className="flex h-[72px] w-[72px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
             style={{ background: 'rgba(246,246,243,0.4)' }}
           >
@@ -319,7 +373,7 @@ export default function TimerApp() {
           <button
             type="button"
             aria-label="Skip"
-            onClick={skip}
+            onClick={handleSkip}
             className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
             style={{ background: 'rgba(246,246,243,0.4)' }}
           >

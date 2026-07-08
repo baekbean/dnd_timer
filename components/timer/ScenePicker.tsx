@@ -2,6 +2,7 @@
 
 import { SCENES } from '@/lib/timer/scenes'
 import { useTimerStore } from '@/lib/timer/store'
+import { trackSceneChange } from '@/lib/ga'
 
 export default function ScenePicker() {
   const sceneId = useTimerStore((s) => s.sceneId)
@@ -18,7 +19,10 @@ export default function ScenePicker() {
             aria-label={`Scene: ${scene.name}`}
             aria-pressed={active}
             title={scene.name}
-            onClick={() => setScene(scene.id)}
+            onClick={() => {
+              if (scene.id !== sceneId) trackSceneChange({ scene_id: scene.id })
+              setScene(scene.id)
+            }}
             className="h-10 w-16 rounded-lg transition-all"
             style={{
               background: scene.fallbackGradient,

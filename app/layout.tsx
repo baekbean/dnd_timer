@@ -13,6 +13,14 @@ export const metadata: Metadata = {
     title: 'Do Not Disturb Timer',
     description: 'A focus timer that belongs on your desk.',
   },
+  appleWebApp: {
+    capable: true,
+    title: 'DND Timer',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    apple: '/icons/icon-180.png',
+  },
 }
 
 const isDev = process.env.NODE_ENV === 'development'

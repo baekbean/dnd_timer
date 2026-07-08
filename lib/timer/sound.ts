@@ -31,6 +31,11 @@ class SoundEngine {
     return this.ctx
   }
 
+  /** Call from a user-gesture handler to unlock audio that started while suspended. */
+  resume() {
+    this.ensureContext()
+  }
+
   setVolume(volume: number) {
     this.volume = Math.min(1, Math.max(0, volume))
     if (this.ctx && this.masterGain) {
