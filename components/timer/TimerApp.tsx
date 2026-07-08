@@ -338,17 +338,24 @@ export default function TimerApp() {
       <div className="flex flex-col items-center gap-6 md:gap-10">
         <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
 
+        {/* DIN Condensed has no tabular figures, so the colon is the layout anchor:
+            minutes grow leftward, seconds rightward, colon never moves */}
         <span
-          className="leading-none text-[#f6f6f3]"
+          className="relative leading-none text-[#f6f6f3]"
           style={{
             fontFamily: 'var(--font-din-condensed)',
             fontWeight: 700,
             fontSize: 'clamp(96px, 24vw, 240px)',
             letterSpacing: '-0.02em',
-            fontVariantNumeric: 'tabular-nums',
           }}
         >
-          {timeText}
+          :
+          <span className="absolute right-full top-0 whitespace-nowrap">
+            {timeText.split(':')[0]}
+          </span>
+          <span className="absolute left-full top-0 whitespace-nowrap">
+            {timeText.split(':')[1]}
+          </span>
         </span>
 
         <div className={`flex items-center justify-center gap-8 md:gap-10 ${chromeClass}`}>
