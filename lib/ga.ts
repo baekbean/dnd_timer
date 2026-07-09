@@ -56,7 +56,7 @@ export function trackSectionView(section_name: SectionName) {
 }
 
 // ── timer product events (see PLAN.md success metrics) ──────────
-type TimerPhase = 'focus' | 'shortBreak' | 'longBreak'
+type TimerPhase = 'focus' | 'shortBreak'
 
 export function trackTimerStart(params: { phase: TimerPhase; scene_id: string }) {
   gtagEvent('timer_start', params)

@@ -40,17 +40,24 @@ export const SCENES: Scene[] = [
     ambient: { kind: 'noise' },
   },
   {
+    id: 'meadow',
+    name: 'Meadow',
+    backgroundImage: '/images/scene-meadow.jpg',
+    fallbackGradient: 'linear-gradient(160deg, #3fc9be 0%, #7ecb8f 55%, #eef0c6 100%)',
+    ambient: { kind: 'noise' },
+  },
+  {
     id: 'dusk',
     name: 'Dusk',
-    backgroundImage: '/images/scene-dusk.png',
-    fallbackGradient: 'linear-gradient(160deg, #46536b 0%, #6b7a8f 55%, #93a3b5 100%)',
+    backgroundImage: '/images/scene-dusk.jpg',
+    fallbackGradient: 'linear-gradient(160deg, #e838d0 0%, #6a3aa8 55%, #0d0714 100%)',
     ambient: { kind: 'noise' },
   },
   {
     id: 'night',
     name: 'Night',
-    backgroundImage: '/images/scene-night.png',
-    fallbackGradient: 'linear-gradient(160deg, #22233a 0%, #3a3a5c 55%, #50507a 100%)',
+    backgroundImage: '/images/scene-night.jpg',
+    fallbackGradient: 'linear-gradient(160deg, #9a8ef0 0%, #3a3168 55%, #0a0812 100%)',
     ambient: { kind: 'noise' },
   },
 ]

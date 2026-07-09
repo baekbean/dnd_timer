@@ -2,14 +2,16 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
 
-export type Phase = 'focus' | 'shortBreak' | 'longBreak'
+export type Phase = 'focus' | 'shortBreak'
 export type TimerStatus = 'idle' | 'running' | 'paused'
 
 export interface TimerSettings {
   focusMin: number
   shortBreakMin: number
-  longBreakMin: number
-  sessionsUntilLongBreak: number
+  /** Minutes added to the current focus session by the quick-extend button. */
+  focusExtendMin: number
+  /** Focus sessions per cycle — cyclePos wraps back to 0 after this many. */
+  sessionsPerCycle: number
   autoStartBreaks: boolean
   autoStartFocus: boolean
   notifyOnComplete: boolean
@@ -18,8 +20,8 @@ export interface TimerSettings {
 export const DEFAULT_SETTINGS: TimerSettings = {
   focusMin: 25,
   shortBreakMin: 5,
-  longBreakMin: 15,
-  sessionsUntilLongBreak: 4,
+  focusExtendMin: 5,
+  sessionsPerCycle: 4,
   autoStartBreaks: true,
   autoStartFocus: false,
   notifyOnComplete: false,
@@ -38,7 +40,7 @@ interface TimerState {
   endAt: number | null
   /** Remaining time in ms — authoritative when idle/paused, refreshed by tick() while running. */
   remainingMs: number
-  /** Position within the focus cycle (0-based). Resets after a long break. */
+  /** Position within the focus cycle (0-based). Wraps back to 0 after `sessionsPerCycle`. */
   cyclePos: number
   daily: DailyLog
   sceneId: string
@@ -55,9 +57,14 @@ interface TimerState {
   start: () => void
   pause: () => void
   reset: () => void
+  /** Resets the whole focus cycle back to the first focus segment. */
+  resetSession: () => void
   skip: () => void
   tick: () => void
   updateSettings: (patch: Partial<TimerSettings>) => void
+  applySettingsNow: (patch: Partial<TimerSettings>) => void
+  /** Adds `minutes` to the current focus session's remaining time. No-op outside focus. */
+  extendFocus: (minutes: number) => void
   setScene: (sceneId: string) => void
   setSoundOn: (on: boolean) => void
   setVolume: (volume: number) => void
@@ -72,12 +79,7 @@ function todayKey(): string {
 }
 
 export function phaseDurationMs(phase: Phase, settings: TimerSettings): number {
-  const min =
-    phase === 'focus'
-      ? settings.focusMin
-      : phase === 'shortBreak'
-        ? settings.shortBreakMin
-        : settings.longBreakMin
+  const min = phase === 'focus' ? settings.focusMin : settings.shortBreakMin
   return Math.round(min * 60_000)
 }
 
@@ -93,19 +95,18 @@ function nextPhase(
   natural: boolean
 ): PhaseAdvance {
   if (state.phase === 'focus') {
-    const cyclePos = state.cyclePos + 1
-    const isLong = cyclePos % state.settings.sessionsUntilLongBreak === 0
     return {
-      phase: isLong ? 'longBreak' : 'shortBreak',
-      cyclePos,
+      phase: 'shortBreak',
+      cyclePos: state.cyclePos + 1,
       completedDelta: natural ? 1 : 0,
       autoStart: state.settings.autoStartBreaks,
     }
   }
+  // A break that closes out a full cycle wraps the position back to the start
+  const completesCycle = state.cyclePos % state.settings.sessionsPerCycle === 0
   return {
     phase: 'focus',
-    // A long break closes the cycle
-    cyclePos: state.phase === 'longBreak' ? 0 : state.cyclePos,
+    cyclePos: completesCycle ? 0 : state.cyclePos,
     completedDelta: 0,
     autoStart: state.settings.autoStartFocus,
   }
@@ -158,6 +159,17 @@ export const useTimerStore = create<TimerState>()(
         })
       },
 
+      resetSession: () => {
+        const s = get()
+        set({
+          phase: 'focus',
+          cyclePos: 0,
+          status: 'idle',
+          endAt: null,
+          remainingMs: phaseDurationMs('focus', s.settings),
+        })
+      },
+
       skip: () => {
         const s = get()
         const adv = nextPhase(s, false)
@@ -204,6 +216,29 @@ export const useTimerStore = create<TimerState>()(
         const remainingMs =
           s.status === 'idle' ? phaseDurationMs(s.phase, settings) : s.remainingMs
         set({ settings, remainingMs })
+      },
+
+      /** Like updateSettings, but restarts the current phase's countdown from the new duration right away. */
+      applySettingsNow: (patch) => {
+        const s = get()
+        const settings = { ...s.settings, ...patch }
+        const remainingMs = phaseDurationMs(s.phase, settings)
+        set({
+          settings,
+          remainingMs,
+          endAt: s.status === 'running' ? Date.now() + remainingMs : null,
+        })
+      },
+
+      extendFocus: (minutes) => {
+        const s = get()
+        if (s.phase !== 'focus') return
+        const extraMs = Math.round(minutes * 60_000)
+        if (s.status === 'running' && s.endAt !== null) {
+          set({ endAt: s.endAt + extraMs, remainingMs: s.remainingMs + extraMs })
+        } else {
+          set({ remainingMs: s.remainingMs + extraMs })
+        }
       },
 
       setScene: (sceneId) => set({ sceneId }),

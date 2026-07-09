@@ -23,9 +23,13 @@ export default function ScenePicker() {
               if (scene.id !== sceneId) trackSceneChange({ scene_id: scene.id })
               setScene(scene.id)
             }}
-            className="h-10 w-16 rounded-lg transition-all"
+            className="h-10 w-[60px] rounded-xl bg-cover bg-center transition-all"
             style={{
-              background: scene.fallbackGradient,
+              background: scene.backgroundImage
+                ? `url(${scene.backgroundImage})`
+                : scene.fallbackGradient,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               boxShadow: active
                 ? '0 0 0 2px rgba(246,246,243,0.9), 0 2px 8px rgba(0,0,0,0.25)'
                 : '0 0 0 1px rgba(246,246,243,0.25), 0 2px 8px rgba(0,0,0,0.15)',

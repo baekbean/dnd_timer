@@ -17,11 +17,11 @@ import SceneBackground from '@/components/timer/SceneBackground'
 import SettingsPanel from '@/components/timer/SettingsPanel'
 import ScenePicker from '@/components/timer/ScenePicker'
 import CompleteOverlay from '@/components/timer/CompleteOverlay'
+import ResetSessionToast from '@/components/timer/ResetSessionToast'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
   shortBreak: 'Short break',
-  longBreak: 'Long break',
 }
 
 function pad(n: number) {
@@ -37,7 +37,7 @@ function formatTime(ms: number) {
 
 function PlayIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <svg width="27" height="27" viewBox="0 0 18 18" fill="none">
       <path d="M4 2L15 9L4 16V2Z" fill="#f6f6f3" />
     </svg>
   )
@@ -45,7 +45,7 @@ function PlayIcon() {
 
 function PauseIcon() {
   return (
-    <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+    <svg width="24" height="27" viewBox="0 0 16 18" fill="none">
       <rect x="1" y="1" width="5" height="16" rx="2" fill="#f6f6f3" />
       <rect x="10" y="1" width="5" height="16" rx="2" fill="#f6f6f3" />
     </svg>
@@ -116,6 +116,138 @@ function FullscreenIcon({ active }: { active: boolean }) {
   )
 }
 
+function PencilIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M9.5 1.5L12.5 4.5L4.5 12.5H1.5V9.5L9.5 1.5Z"
+        stroke="#f6f6f3"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function FloatingExtendBadge({ minutes, onDone }: { minutes: number; onDone: () => void }) {
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const anim = el.animate(
+      [
+        { transform: 'translateY(0px)', opacity: 0 },
+        { transform: 'translateY(-6px)', opacity: 1, offset: 0.2 },
+        { transform: 'translateY(-22px)', opacity: 0 },
+      ],
+      { duration: 700, easing: 'ease-out' }
+    )
+    anim.onfinish = onDone
+    return () => anim.cancel()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <span
+      ref={ref}
+      className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 whitespace-nowrap text-[13px] font-semibold leading-none text-[#f6f6f3]"
+    >
+      +{minutes} min
+    </span>
+  )
+}
+
+function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void }) {
+  const focusExtendMin = useTimerStore((s) => s.settings.focusExtendMin)
+  const extendFocus = useTimerStore((s) => s.extendFocus)
+  const updateSettings = useTimerStore((s) => s.updateSettings)
+  const [editing, setEditing] = useState(false)
+  const [text, setText] = useState(String(focusExtendMin))
+  const [floats, setFloats] = useState<{ id: number; minutes: number }[]>([])
+
+  const commit = () => {
+    const parsed = Number(text)
+    const clamped =
+      text.trim() !== '' && Number.isFinite(parsed)
+        ? Math.min(180, Math.max(1, Math.round(parsed)))
+        : focusExtendMin
+    setText(String(clamped))
+    if (clamped !== focusExtendMin) updateSettings({ focusExtendMin: clamped })
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div
+        className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
+        style={{ background: 'rgba(246,246,243,0.15)', border: '1px solid rgba(246,246,243,0.3)' }}
+      >
+        <input
+          type="number"
+          inputMode="numeric"
+          autoFocus
+          value={text}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => {
+            const raw = e.target.value
+            if (raw === '' || /^\d+$/.test(raw)) setText(raw)
+          }}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Escape') {
+              setText(String(focusExtendMin))
+              setEditing(false)
+            }
+          }}
+          className="w-8 bg-transparent text-center text-[13px] leading-none text-[#f6f6f3] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          style={{ MozAppearance: 'textfield' }}
+        />
+        <span className="text-[13px] leading-none text-[#f6f6f3]">min</span>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5"
+      style={{ background: 'rgba(246,246,243,0.15)', border: '1px solid rgba(246,246,243,0.3)' }}
+    >
+      {floats.map((f) => (
+        <FloatingExtendBadge
+          key={f.id}
+          minutes={f.minutes}
+          onDone={() => setFloats((prev) => prev.filter((p) => p.id !== f.id))}
+        />
+      ))}
+      <button
+        type="button"
+        onClick={() => {
+          extendFocus(focusExtendMin)
+          onExtend(focusExtendMin)
+          setFloats((prev) => [...prev, { id: Date.now() + Math.random(), minutes: focusExtendMin }])
+        }}
+        className="text-[13px] leading-none text-[#f6f6f3] transition-opacity hover:opacity-80"
+      >
+        +{focusExtendMin} min
+      </button>
+      <button
+        type="button"
+        aria-label="Edit extend amount"
+        onClick={() => {
+          setText(String(focusExtendMin))
+          setEditing(true)
+        }}
+        className="flex h-6 w-6 items-center justify-center rounded-full opacity-70 transition-opacity hover:opacity-100"
+      >
+        <PencilIcon />
+      </button>
+    </div>
+  )
+}
+
 function useFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
@@ -147,6 +279,7 @@ export default function TimerApp() {
   const start = useTimerStore((s) => s.start)
   const pause = useTimerStore((s) => s.pause)
   const reset = useTimerStore((s) => s.reset)
+  const resetSession = useTimerStore((s) => s.resetSession)
   const skip = useTimerStore((s) => s.skip)
   const tick = useTimerStore((s) => s.tick)
   const setSoundOn = useTimerStore((s) => s.setSoundOn)
@@ -158,8 +291,20 @@ export default function TimerApp() {
   const sessionsToday = useTimerStore((s) => s.daily.completedSessions)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [showResetToast, setShowResetToast] = useState(false)
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
+
+  // Brief scale pulse on the digits whenever the user extends the focus session
+  const digitsRef = useRef<HTMLSpanElement>(null)
+  const handleExtendPulse = () => {
+    const el = digitsRef.current
+    if (!el) return
+    el.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.03)' }, { transform: 'scale(1)' }],
+      { duration: 320, easing: 'ease-out' }
+    )
+  }
 
   // Chrome fades away while a session runs untouched — camera-ready screen
   const chromeHidden = useIdleHide(status === 'running' && !settingsOpen && !justCompletedFocus)
@@ -261,6 +406,13 @@ export default function TimerApp() {
   const handleReset = () => {
     abandonIfMidFocus('reset')
     reset()
+    // Only worth asking if there's more session left than the segment we just reset
+    if (phase !== 'focus' || cyclePos > 0) setShowResetToast(true)
+  }
+
+  const handleResetSessionConfirm = () => {
+    setShowResetToast(false)
+    resetSession()
   }
 
   const handleSkip = () => {
@@ -343,27 +495,27 @@ export default function TimerApp() {
       <div className="flex flex-col items-center gap-6 md:gap-10">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
-          {settings.sessionsUntilLongBreak > 1 && (
+          {settings.sessionsPerCycle > 1 && (
             <div
               className="flex items-center gap-[6px]"
               role="img"
-              aria-label={`Session ${Math.min(cyclePos + 1, settings.sessionsUntilLongBreak)} of ${settings.sessionsUntilLongBreak} before long break`}
+              aria-label={`Session ${Math.min(cyclePos + 1, settings.sessionsPerCycle)} of ${settings.sessionsPerCycle}`}
             >
-              {Array.from({ length: settings.sessionsUntilLongBreak }).map((_, i) => (
-                <span key={i} className="flex items-center gap-[6px]" aria-hidden="true">
-                  {i > 0 && (
-                    <span className="h-px w-[3px]" style={{ background: '#f6f6f3', opacity: 0.3 }} />
-                  )}
+              {Array.from({ length: settings.sessionsPerCycle }).map((_, i) => {
+                const isCurrent = phase === 'focus' && i === cyclePos
+                return (
                   <span
-                    className="block h-[7px] w-[7px] rounded-full"
+                    key={i}
+                    className={`block h-[7px] w-[7px] rounded-full ${isCurrent ? 'animate-pulse' : ''}`}
+                    aria-hidden="true"
                     style={
-                      i < cyclePos
+                      i < cyclePos || isCurrent
                         ? { background: '#f6f6f3' }
                         : { border: '1px solid #f6f6f3', opacity: 0.45 }
                     }
                   />
-                </span>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -371,6 +523,7 @@ export default function TimerApp() {
         {/* DIN Condensed has no tabular figures, so the colon is the layout anchor:
             minutes grow leftward, seconds rightward, colon never moves */}
         <span
+          ref={digitsRef}
           className="relative leading-none text-[#f6f6f3]"
           style={{
             fontFamily: 'var(--font-din-condensed)',
@@ -394,7 +547,7 @@ export default function TimerApp() {
             aria-label="Reset"
             onClick={handleReset}
             className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(246,246,243,0.4)' }}
+            style={{ background: 'rgba(246,246,243,0.2)' }}
           >
             <ResetIcon />
           </button>
@@ -403,7 +556,7 @@ export default function TimerApp() {
             aria-label={status === 'running' ? 'Pause' : 'Start'}
             onClick={handleStartPause}
             className="flex h-[72px] w-[72px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(246,246,243,0.4)' }}
+            style={{ background: 'rgba(246,246,243,0.2)' }}
           >
             {status === 'running' ? <PauseIcon /> : <PlayIcon />}
           </button>
@@ -412,10 +565,16 @@ export default function TimerApp() {
             aria-label="Skip"
             onClick={handleSkip}
             className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-            style={{ background: 'rgba(246,246,243,0.4)' }}
+            style={{ background: 'rgba(246,246,243,0.2)' }}
           >
             <SkipIcon />
           </button>
+        </div>
+
+        {/* Always mounted so the timer/controls above never re-center when this
+            shows or hides — only its visibility toggles with phase/status */}
+        <div className={`${chromeClass} ${phase === 'focus' && status !== 'idle' ? '' : 'invisible'}`}>
+          <FocusExtendControl onExtend={handleExtendPulse} />
         </div>
       </div>
 
@@ -423,6 +582,13 @@ export default function TimerApp() {
       <div className={`absolute bottom-6 ${chromeClass}`}>
         <ScenePicker />
       </div>
+
+      {showResetToast && (
+        <ResetSessionToast
+          onConfirm={handleResetSessionConfirm}
+          onDismiss={() => setShowResetToast(false)}
+        />
+      )}
 
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
       {justCompletedFocus && (
