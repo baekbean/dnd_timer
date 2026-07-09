@@ -4,7 +4,7 @@ import type { Scene } from '@/lib/timer/scenes'
 
 export default function SceneBackground({ scene }: { scene: Scene }) {
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden bg-black">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       <div
         className="absolute overflow-hidden"
         style={{
