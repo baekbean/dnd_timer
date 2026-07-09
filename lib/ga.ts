@@ -58,8 +58,13 @@ export function trackSectionView(section_name: SectionName) {
 // ── timer product events (see PLAN.md success metrics) ──────────
 type TimerPhase = 'focus' | 'shortBreak'
 
-export function trackTimerStart(params: { phase: TimerPhase; scene_id: string }) {
+export function trackTimerStart(params: { phase: TimerPhase; scene_id: string; focus_min: number }) {
   gtagEvent('timer_start', params)
+}
+
+/** The +N min quick-extend button was used mid-focus-session. */
+export function trackFocusExtend(params: { minutes: number }) {
+  gtagEvent('focus_extend', params)
 }
 
 export function trackSessionComplete(params: { completed_phase: TimerPhase; sessions_today: number }) {

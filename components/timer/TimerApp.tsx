@@ -8,6 +8,7 @@ import {
   trackSessionComplete,
   trackSessionAbandon,
   trackFullscreenEnter,
+  trackFocusExtend,
 } from '@/lib/ga'
 import { getScene } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
@@ -226,6 +227,7 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
         type="button"
         onClick={() => {
           extendFocus(focusExtendMin)
+          trackFocusExtend({ minutes: focusExtendMin })
           onExtend(focusExtendMin)
           setFloats((prev) => [...prev, { id: Date.now() + Math.random(), minutes: focusExtendMin }])
         }}
@@ -258,10 +260,13 @@ function useFullscreen() {
   }, [])
 
   const toggle = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {})
-    } else {
-      document.documentElement.requestFullscreen?.().catch(() => {})
+    try {
+      const result = document.fullscreenElement
+        ? document.exitFullscreen?.()
+        : document.documentElement.requestFullscreen?.()
+      result?.catch?.(() => {})
+    } catch {
+      // Fullscreen API unsupported or blocked (e.g. Safari <16.4 returns no promise)
     }
   }
 
@@ -392,7 +397,7 @@ export default function TimerApp() {
     if (status === 'running') {
       pause()
     } else {
-      trackTimerStart({ phase, scene_id: sceneId })
+      trackTimerStart({ phase, scene_id: sceneId, focus_min: settings.focusMin })
       start()
     }
   }

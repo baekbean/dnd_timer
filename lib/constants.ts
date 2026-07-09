@@ -1,5 +1,7 @@
 const GOOGLE_FORM_ID = '1FAIpQLSeyyyWhrM3YwIFJ0GYK6b1fJ5y0v1z_koY3pT-uh3eVkkoTpA'
 
+export const FEEDBACK_FORM_URL = 'https://forms.gle/8MznFbNymJ2JyhWA8'
+
 export const GOOGLE_FORM_BASE_URL: string =
   `https://docs.google.com/forms/d/e/${GOOGLE_FORM_ID}/viewform`
 

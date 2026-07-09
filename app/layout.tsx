@@ -29,6 +29,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {GA_MEASUREMENT_ID && (
+          // Runs synchronously before gtag.js loads. Visiting once with ?ga_off=1
+          // persists an opt-out flag (localStorage) that gtag.js checks on every
+          // hit — including automatic pageviews — so it fully excludes this
+          // browser from GA data. ?ga_on=1 clears it.
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{
+                var k='dnd-timer-ga-opt-out';
+                var p=new URLSearchParams(window.location.search);
+                if(p.has('ga_off'))localStorage.setItem(k,'1');
+                if(p.has('ga_on'))localStorage.removeItem(k);
+                if(localStorage.getItem(k)==='1')window['ga-disable-${GA_MEASUREMENT_ID}']=true;
+              }catch(e){}})();`,
+            }}
+          />
+        )}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

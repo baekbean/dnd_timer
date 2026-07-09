@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { FEEDBACK_FORM_URL } from '@/lib/constants'
 import { useTimerStore, type TimerSettings, type Phase } from '@/lib/timer/store'
 
 type TimingKey = 'focusMin' | 'shortBreakMin' | 'sessionsPerCycle'
@@ -46,6 +47,7 @@ function DurationField({
   const [text, setText] = useState(String(value))
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep editable input text in sync with preset buttons.
     setText(String(value))
   }, [value])
 
@@ -286,6 +288,17 @@ export default function SettingsPanel({ onClose }: Props) {
               set({ notifyOnComplete: v })
             }}
           />
+
+          <div className="pt-1 text-center">
+            <a
+              href={FEEDBACK_FORM_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="font-pretendard text-[13px] text-[#343434]/55 underline underline-offset-4 transition-colors hover:text-[#343434]"
+            >
+              Send feedback
+            </a>
+          </div>
         </div>
       </div>
 
