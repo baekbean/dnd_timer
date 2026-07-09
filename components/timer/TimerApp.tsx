@@ -497,7 +497,7 @@ export default function TimerApp() {
       </div>
 
       {/* Timer */}
-      <div className="flex flex-col items-center gap-6 md:gap-10">
+      <div className="relative flex flex-col items-center gap-6 md:gap-10">
         <div className="flex flex-col items-center gap-2">
           <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
           {settings.sessionsPerCycle > 1 && (
@@ -576,9 +576,12 @@ export default function TimerApp() {
           </button>
         </div>
 
-        {/* Always mounted so the timer/controls above never re-center when this
-            shows or hides — only its visibility toggles with phase/status */}
-        <div className={`${chromeClass} ${phase === 'focus' && status !== 'idle' ? '' : 'invisible'}`}>
+        {/* Absolutely positioned below the controls so it never factors into the
+            timer block's height — the digits/controls stay vertically centered
+            whether or not this is showing */}
+        <div
+          className={`absolute left-1/2 top-full mt-6 -translate-x-1/2 md:mt-10 ${chromeClass} ${phase === 'focus' && status !== 'idle' ? '' : 'invisible'}`}
+        >
           <FocusExtendControl onExtend={handleExtendPulse} />
         </div>
       </div>
