@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/next'
 import { GA_MEASUREMENT_ID } from '@/lib/ga'
-import CopyProtection from '@/components/CopyProtection'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -58,7 +57,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <CopyProtection />
         {children}
         <Analytics />
 
