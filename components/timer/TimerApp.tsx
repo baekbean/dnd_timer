@@ -525,7 +525,7 @@ export default function TimerApp() {
           const digitStyle = {
             fontFamily: 'var(--font-din-condensed)',
             fontWeight: 700,
-            fontSize: `clamp(${Math.round(96 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(240 * scale)}px)`,
+            fontSize: `clamp(${Math.round(96 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(480 * scale)}px)`,
             letterSpacing: '-0.02em',
           }
           if (parts.length === 3) {

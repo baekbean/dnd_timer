@@ -32,7 +32,7 @@ export default function CompleteOverlay({
         style={{
           fontFamily: 'var(--font-din-condensed)',
           fontWeight: 700,
-          fontSize: 'clamp(64px, 14vw, 140px)',
+          fontSize: 'clamp(64px, 14vw, 280px)',
           letterSpacing: '-0.02em',
         }}
       >
