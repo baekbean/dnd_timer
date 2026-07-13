@@ -12,6 +12,7 @@ import { getScene, SCENES } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
 import { useIdleHide } from '@/lib/timer/useIdleHide'
+import { formatTime, getDigitScale } from '@/lib/timer/formatTime'
 import { trackSceneChange } from '@/lib/ga'
 import YoutubeSceneBackground from '@/components/timer-test/YoutubeSceneBackground'
 import SettingsPanelFeather from '@/components/timer-test/SettingsPanelFeather'
@@ -24,17 +25,6 @@ const PHASE_LABEL: Record<Phase, string> = {
 }
 
 const INK = '#343434'
-
-function pad(n: number) {
-  return String(n).padStart(2, '0')
-}
-
-function formatTime(ms: number) {
-  const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${pad(m)}:${pad(s)}`
-}
 
 function PlayIcon() {
   return (
@@ -315,6 +305,7 @@ export default function TimerAppFeather() {
     phase === 'focus' ? `Focus / Session ${cyclePos + 1}` : PHASE_LABEL[phase]
 
   const timeText = formatTime(remainingMs)
+  const digitScale = getDigitScale(timeText)
   useEffect(() => {
     if (status === 'running' || status === 'paused') {
       document.title = `${timeText} · ${PHASE_LABEL[phase]} — Do Not Disturb Timer`
@@ -386,7 +377,10 @@ export default function TimerAppFeather() {
             >
               {phaseLabel.toUpperCase()}
             </span>
-            <TimeDisplay text={timeText} fontSize="clamp(64px, 16vw, 120px)" />
+            <TimeDisplay
+              text={timeText}
+              fontSize={`clamp(${Math.round(64 * digitScale)}px, ${(16 * digitScale).toFixed(2)}vw, ${Math.round(120 * digitScale)}px)`}
+            />
             <button
               type="button"
               onClick={handleStartPause}
@@ -499,7 +493,10 @@ export default function TimerAppFeather() {
             >
               {phaseLabel.toUpperCase()}
             </span>
-            <TimeDisplay text={timeText} fontSize="clamp(72px, 18vw, 160px)" />
+            <TimeDisplay
+              text={timeText}
+              fontSize={`clamp(${Math.round(72 * digitScale)}px, ${(18 * digitScale).toFixed(2)}vw, ${Math.round(160 * digitScale)}px)`}
+            />
           </div>
 
           <div className={`flex items-center justify-center gap-6 ${chromeClass}`}>

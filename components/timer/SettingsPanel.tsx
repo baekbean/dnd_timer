@@ -95,7 +95,7 @@ function DurationField({
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.currentTarget.blur()
           }}
-          className="w-16 shrink-0 rounded-lg border border-[#343434]/15 bg-[#F6F6F3] px-2 py-1.5 text-right font-pretendard text-[15px] text-[#343434] outline-none focus:border-[#343434]/40 [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
+          className="w-20 shrink-0 rounded-lg border border-[#343434]/15 bg-[#F6F6F3] px-2 py-1.5 text-right font-pretendard text-[15px] text-[#343434] outline-none focus:border-[#343434]/40 [appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
           style={{ MozAppearance: 'textfield' }}
         />
       </div>
@@ -240,7 +240,7 @@ export default function SettingsPanel({ onClose }: Props) {
             label="Focus"
             value={draft.focusMin}
             min={1}
-            max={120}
+            max={9999}
             presets={[60, 50, 30, 25]}
             onChange={(v) => setDraftField({ focusMin: v })}
           />
@@ -248,7 +248,7 @@ export default function SettingsPanel({ onClose }: Props) {
             label="Break"
             value={draft.shortBreakMin}
             min={1}
-            max={60}
+            max={9999}
             presets={[15, 10, 5]}
             onChange={(v) => setDraftField({ shortBreakMin: v })}
           />

@@ -14,6 +14,7 @@ import { getScene } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
 import { useIdleHide } from '@/lib/timer/useIdleHide'
+import { formatTime, getDigitScale } from '@/lib/timer/formatTime'
 import SceneBackground from '@/components/timer/SceneBackground'
 import SettingsPanel from '@/components/timer/SettingsPanel'
 import ScenePicker from '@/components/timer/ScenePicker'
@@ -23,17 +24,6 @@ import ResetSessionToast from '@/components/timer/ResetSessionToast'
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
   shortBreak: 'Short break',
-}
-
-function pad(n: number) {
-  return String(n).padStart(2, '0')
-}
-
-function formatTime(ms: number) {
-  const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${pad(m)}:${pad(s)}`
 }
 
 function PlayIcon() {
@@ -172,7 +162,7 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
     const parsed = Number(text)
     const clamped =
       text.trim() !== '' && Number.isFinite(parsed)
-        ? Math.min(180, Math.max(1, Math.round(parsed)))
+        ? Math.min(9999, Math.max(1, Math.round(parsed)))
         : focusExtendMin
     setText(String(clamped))
     if (clamped !== focusExtendMin) updateSettings({ focusExtendMin: clamped })
@@ -203,7 +193,7 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
               setEditing(false)
             }
           }}
-          className="w-8 bg-transparent text-center text-[13px] leading-none text-[#f6f6f3] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className="w-12 bg-transparent text-center text-[13px] leading-none text-[#f6f6f3] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           style={{ MozAppearance: 'textfield' }}
         />
         <span className="text-[13px] leading-none text-[#f6f6f3]">min</span>
@@ -526,25 +516,33 @@ export default function TimerApp() {
         </div>
 
         {/* DIN Condensed has no tabular figures, so the colon is the layout anchor:
-            minutes grow leftward, seconds rightward, colon never moves */}
-        <span
-          ref={digitsRef}
-          className="relative leading-none text-[#f6f6f3]"
-          style={{
+            minutes grow leftward, seconds rightward, colon never moves.
+            Once hours appear (H:MM:SS) there's no single anchor colon, so fall
+            back to plain centered text instead. */}
+        {(() => {
+          const parts = timeText.split(':')
+          const scale = getDigitScale(timeText)
+          const digitStyle = {
             fontFamily: 'var(--font-din-condensed)',
             fontWeight: 700,
-            fontSize: 'clamp(96px, 24vw, 240px)',
+            fontSize: `clamp(${Math.round(96 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(240 * scale)}px)`,
             letterSpacing: '-0.02em',
-          }}
-        >
-          :
-          <span className="absolute right-full top-0 whitespace-nowrap">
-            {timeText.split(':')[0]}
-          </span>
-          <span className="absolute left-full top-0 whitespace-nowrap">
-            {timeText.split(':')[1]}
-          </span>
-        </span>
+          }
+          if (parts.length === 3) {
+            return (
+              <span ref={digitsRef} className="relative whitespace-nowrap leading-none text-[#f6f6f3]" style={digitStyle}>
+                {timeText}
+              </span>
+            )
+          }
+          return (
+            <span ref={digitsRef} className="relative leading-none text-[#f6f6f3]" style={digitStyle}>
+              :
+              <span className="absolute right-full top-0 whitespace-nowrap">{parts[0]}</span>
+              <span className="absolute left-full top-0 whitespace-nowrap">{parts[1]}</span>
+            </span>
+          )
+        })()}
 
         <div className="flex items-center justify-center gap-8 md:gap-10">
           <button

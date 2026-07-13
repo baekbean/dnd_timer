@@ -133,14 +133,14 @@ export default function SettingsPanelFeather({ onClose }: Props) {
             label="Focus (minutes)"
             value={settings.focusMin}
             min={1}
-            max={120}
+            max={9999}
             onChange={(v) => set({ focusMin: v })}
           />
           <DurationField
             label="Short break (minutes)"
             value={settings.shortBreakMin}
             min={1}
-            max={60}
+            max={9999}
             onChange={(v) => set({ shortBreakMin: v })}
           />
           <div className="my-1 h-px bg-[#343434]/10" />
