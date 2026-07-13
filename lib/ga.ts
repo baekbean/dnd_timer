@@ -83,3 +83,14 @@ export function trackSceneChange(params: { scene_id: string }) {
 export function trackFullscreenEnter() {
   gtagEvent('fullscreen_enter', {})
 }
+
+/** The mute/unmute pill was toggled — captures user intent, not just ambient start/stop. */
+export function trackSoundToggle(params: { sound_on: boolean }) {
+  gtagEvent('sound_change', params)
+}
+
+// ── 404_hit ─────────────────────────────────────────────────────
+/** Fired from the not-found page so broken/stale links show up as diagnosable data instead of a dead end. */
+export function trackNotFound(params: { attempted_path: string; referrer: string }) {
+  gtagEvent('404_hit', params)
+}

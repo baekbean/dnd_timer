@@ -7,6 +7,7 @@ import {
   trackSessionComplete,
   trackSessionAbandon,
   trackFullscreenEnter,
+  trackSoundToggle,
 } from '@/lib/ga'
 import { getScene, SCENES } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
@@ -332,7 +333,10 @@ export default function TimerAppFeather() {
           type="button"
           aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
           aria-pressed={soundOn}
-          onClick={() => setSoundOn(!soundOn)}
+          onClick={() => {
+            trackSoundToggle({ sound_on: !soundOn })
+            setSoundOn(!soundOn)
+          }}
           className="flex items-center gap-2 rounded-full px-3 py-2 transition-transform hover:-translate-y-0.5"
           style={{ background: '#FEFEFB', boxShadow: '0 4px 12px rgba(52,52,52,0.16)', opacity: soundOn ? 1 : 0.6 }}
         >
