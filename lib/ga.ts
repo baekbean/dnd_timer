@@ -67,8 +67,14 @@ export function trackFocusExtend(params: { minutes: number }) {
   gtagEvent('focus_extend', params)
 }
 
+/**
+ * Fires as `focus_complete` or `break_complete` depending on which phase just
+ * finished naturally, so GA4 can compare against `timer_start` by event name
+ * alone — no `completed_phase` parameter filter needed in reports.
+ */
 export function trackSessionComplete(params: { completed_phase: TimerPhase; sessions_today: number }) {
-  gtagEvent('session_complete', params)
+  const eventName = params.completed_phase === 'focus' ? 'focus_complete' : 'break_complete'
+  gtagEvent(eventName, params)
 }
 
 /** A running/paused focus session was cut short by reset or skip. */
