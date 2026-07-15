@@ -100,3 +100,14 @@ export function trackSoundToggle(params: { sound_on: boolean }) {
 export function trackNotFound(params: { attempted_path: string; referrer: string }) {
   gtagEvent('404_hit', params)
 }
+
+// ── feedback flow ───────────────────────────────────────────────
+/** "Send feedback" was clicked, revealing the inline form — funnel start. */
+export function trackFeedbackClick(params: { button_location: string; page?: string }) {
+  gtagEvent('feedback_click', params)
+}
+
+/** The feedback form was actually submitted — funnel end. */
+export function trackFeedbackSubmit(params: { page?: string }) {
+  gtagEvent('feedback_submit', params)
+}

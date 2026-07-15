@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { FEEDBACK_FORM_URL } from '@/lib/constants'
+import { FEEDBACK_FORM_URL, submitFeedbackSilently } from '@/lib/constants'
+import { trackFeedbackClick, trackFeedbackSubmit } from '@/lib/ga'
 import { useTimerStore, type TimerSettings, type Phase } from '@/lib/timer/store'
 
 type TimingKey = 'focusMin' | 'shortBreakMin' | 'sessionsPerCycle'
@@ -151,6 +152,67 @@ function VolumeField() {
   )
 }
 
+function FeedbackLink() {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  const [sent, setSent] = useState(false)
+
+  if (sent) {
+    return (
+      <p className="pt-1 text-center font-pretendard text-[13px] text-[#343434]/55">
+        Thanks for the feedback!
+      </p>
+    )
+  }
+
+  if (!open) {
+    return (
+      <div className="pt-1 text-center">
+        <button
+          type="button"
+          onClick={() => {
+            trackFeedbackClick({ button_location: 'settings', page: 'timer' })
+            setOpen(true)
+          }}
+          className="font-pretendard text-[13px] text-[#343434]/55 underline underline-offset-4 transition-colors hover:text-[#343434]"
+        >
+          Send feedback
+        </button>
+      </div>
+    )
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    trackFeedbackSubmit({ page: 'timer' })
+    submitFeedbackSilently(text)
+    // Also opens the real form so the person can add more detail if they
+    // want, and so feedback still reaches us even before the silent-POST
+    // entry IDs above are filled in.
+    window.open(FEEDBACK_FORM_URL, '_blank', 'noopener,noreferrer')
+    setSent(true)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2 pt-1">
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="What's on your mind?"
+        rows={3}
+        className="w-full resize-none rounded-lg border border-[#343434]/15 bg-[#F6F6F3] px-3 py-2 font-pretendard text-[14px] text-[#343434] outline-none focus:border-[#343434]/40"
+      />
+      <button
+        type="submit"
+        className="self-center rounded-full bg-[#343434] px-5 py-2 font-pretendard text-[13px] text-[#F6F6F3] transition-opacity hover:opacity-80"
+      >
+        Send
+      </button>
+    </form>
+  )
+}
+
 export default function SettingsPanel({ onClose }: Props) {
   const settings = useTimerStore((s) => s.settings)
   const status = useTimerStore((s) => s.status)
@@ -289,16 +351,7 @@ export default function SettingsPanel({ onClose }: Props) {
             }}
           />
 
-          <div className="pt-1 text-center">
-            <a
-              href={FEEDBACK_FORM_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="font-pretendard text-[13px] text-[#343434]/55 underline underline-offset-4 transition-colors hover:text-[#343434]"
-            >
-              Send feedback
-            </a>
-          </div>
+          <FeedbackLink />
         </div>
       </div>
 
