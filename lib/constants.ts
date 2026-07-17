@@ -18,7 +18,9 @@ export function buildFormUrl(email: string): string {
 
 export function submitEmailSilently(email: string): void {
   if (!email) return
-  const body = new URLSearchParams({ [GOOGLE_FORM_EMAIL_ENTRY]: email })
+  // The form collects responder emails ("응답자 입력"), which makes the extra
+  // emailAddress param mandatory — without it formResponse rejects with 400.
+  const body = new URLSearchParams({ [GOOGLE_FORM_EMAIL_ENTRY]: email, emailAddress: email })
   fetch(GOOGLE_FORM_SUBMIT_URL, {
     method: 'POST',
     mode: 'no-cors',
