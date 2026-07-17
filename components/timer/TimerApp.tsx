@@ -21,6 +21,10 @@ import SettingsPanel from '@/components/timer/SettingsPanel'
 import ScenePicker from '@/components/timer/ScenePicker'
 import CompleteOverlay from '@/components/timer/CompleteOverlay'
 import ResetSessionToast from '@/components/timer/ResetSessionToast'
+import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
+import { detectDeviceType } from '@/lib/deviceType'
+import { useDeviceType } from '@/lib/timer/useDeviceType'
+import { hasHandoffBeenDismissed } from '@/lib/timer/handoffSession'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
@@ -288,6 +292,8 @@ export default function TimerApp() {
 
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [showResetToast, setShowResetToast] = useState(false)
+  const [handoffOpen, setHandoffOpen] = useState(false)
+  const deviceType = useDeviceType()
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
 
@@ -310,14 +316,27 @@ export default function TimerApp() {
 
   // Rehydrate persisted state on the client, then reconcile with the wall clock.
   // A true first visit (nothing persisted yet) opens the settings modal so the
-  // person can confirm or tweak the defaults before starting.
+  // person can confirm or tweak the defaults before starting — except on
+  // phones, where the handoff bottom sheet takes that slot instead and the
+  // defaults are fine to start with.
   useEffect(() => {
     const firstVisit = !hasSavedState()
     useTimerStore.persist.rehydrate()
     useTimerStore.getState().syncAfterLoad()
     // eslint-disable-next-line react-hooks/set-state-in-effect -- First-run decision needs the persisted snapshot, only readable after mount.
-    if (firstVisit) setSettingsOpen(true)
+    if (firstVisit && detectDeviceType() !== 'mobile') setSettingsOpen(true)
   }, [])
+
+  // Mobile → desktop/iPad handoff: phones only, ~700ms after the timer screen
+  // is actually in front of the person — so on a first visit it waits for the
+  // settings modal to close, and it never interrupts a running session.
+  useEffect(() => {
+    if (deviceType !== 'mobile') return
+    if (settingsOpen || status === 'running' || justCompletedFocus) return
+    if (hasHandoffBeenDismissed()) return
+    const id = setTimeout(() => setHandoffOpen(true), 700)
+    return () => clearTimeout(id)
+  }, [deviceType, settingsOpen, status, justCompletedFocus])
 
   // If ambient started while the AudioContext was suspended (reload mid-session),
   // the first gesture unlocks it
@@ -609,6 +628,7 @@ export default function TimerApp() {
       {justCompletedFocus && (
         <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
       )}
+      {handoffOpen && <MobileHandoffSheet onClose={() => setHandoffOpen(false)} />}
     </main>
   )
 }
