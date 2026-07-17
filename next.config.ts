@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Dev-only: lets phones on the local network load dev-server assets (HMR,
+  // hydration bundles) when visiting via the machine's LAN IP. No effect in prod.
+  allowedDevOrigins: ["192.168.18.107"],
   async headers() {
     return [
       {
