@@ -3,7 +3,8 @@ import Image from 'next/image'
 const socialLinks = [
   { label: 'TikTok', href: 'https://www.tiktok.com/@dndtimer' },
   { label: 'Instagram', href: 'https://www.instagram.com/dndtimer' },
-  { label: 'Mail', href: 'mailto:hello.dndroom@gmail.com' },
+  { label: 'Discord', href: 'https://discord.gg/7UVmWRkdW' },
+  { label: 'Contact us', href: 'mailto:hello.dndroom@gmail.com' },
 ]
 
 export default function Footer() {
