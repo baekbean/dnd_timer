@@ -21,3 +21,10 @@ Key routing rules:
 - Design system, brand → invoke design-consultation
 - Visual audit, design polish → invoke design-review
 - Architecture review → invoke plan-eng-review
+
+## Testing
+
+- Run `npm test` for the Vitest unit and component suite in `__tests__/`.
+- Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` before deployment.
+- See `TESTING.md` for test layers and conventions.
+- Add tests for both sides of new conditionals and for every bug regression.
