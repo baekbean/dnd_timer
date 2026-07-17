@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
-import { useTimerStore, type Phase } from '@/lib/timer/store'
+import { useTimerStore, hasSavedState, type Phase } from '@/lib/timer/store'
 import {
   trackTimerStart,
   trackSessionComplete,
@@ -308,10 +308,15 @@ export default function TimerApp() {
     chromeHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
   }`
 
-  // Rehydrate persisted state on the client, then reconcile with the wall clock
+  // Rehydrate persisted state on the client, then reconcile with the wall clock.
+  // A true first visit (nothing persisted yet) opens the settings modal so the
+  // person can confirm or tweak the defaults before starting.
   useEffect(() => {
+    const firstVisit = !hasSavedState()
     useTimerStore.persist.rehydrate()
     useTimerStore.getState().syncAfterLoad()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- First-run decision needs the persisted snapshot, only readable after mount.
+    if (firstVisit) setSettingsOpen(true)
   }, [])
 
   // If ambient started while the AudioContext was suspended (reload mid-session),

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import { DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
 
 export type Phase = 'focus' | 'shortBreak'
@@ -78,8 +78,17 @@ function todayKey(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+/** Persisted data can be corrupted (hand-edited storage, old bugs) — fall back
+ * per-field to the default rather than letting NaN poison the timer math. */
+function finiteOr(value: number, fallback: number): number {
+  return Number.isFinite(value) && value > 0 ? value : fallback
+}
+
 export function phaseDurationMs(phase: Phase, settings: TimerSettings): number {
-  const min = phase === 'focus' ? settings.focusMin : settings.shortBreakMin
+  const min =
+    phase === 'focus'
+      ? finiteOr(settings.focusMin, DEFAULT_SETTINGS.focusMin)
+      : finiteOr(settings.shortBreakMin, DEFAULT_SETTINGS.shortBreakMin)
   return Math.round(min * 60_000)
 }
 
@@ -103,7 +112,8 @@ function nextPhase(
     }
   }
   // A break that closes out a full cycle wraps the position back to the start
-  const completesCycle = state.cyclePos % state.settings.sessionsPerCycle === 0
+  const perCycle = finiteOr(state.settings.sessionsPerCycle, DEFAULT_SETTINGS.sessionsPerCycle)
+  const completesCycle = state.cyclePos % perCycle === 0
   return {
     phase: 'focus',
     cyclePos: completesCycle ? 0 : state.cyclePos,
@@ -114,6 +124,47 @@ function nextPhase(
 
 function freshDaily(daily: DailyLog): DailyLog {
   return daily.date === todayKey() ? daily : { date: todayKey(), completedSessions: 0 }
+}
+
+export const STORAGE_KEY = 'dnd-timer'
+
+// Merely opening the app must never write to storage — rehydration and
+// syncAfterLoad both call set(), which would otherwise persist immediately.
+// The gate opens on the first real user action (settings change, session
+// start/control) and stays open for the rest of the page load.
+let persistArmed = false
+const armPersist = () => {
+  persistArmed = true
+}
+
+const gatedStorage = createJSONStorage<TimerState>(() => ({
+  getItem: (name) => {
+    try {
+      return window.localStorage.getItem(name)
+    } catch {
+      return null
+    }
+  },
+  setItem: (name, value) => {
+    if (!persistArmed) return
+    try {
+      window.localStorage.setItem(name, value)
+    } catch {}
+  },
+  removeItem: (name) => {
+    try {
+      window.localStorage.removeItem(name)
+    } catch {}
+  },
+}))
+
+/** Whether a previous visit already persisted state — false on a true first run. */
+export function hasSavedState(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null
+  } catch {
+    return false
+  }
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -134,6 +185,7 @@ export const useTimerStore = create<TimerState>()(
       justCompletedFocus: false,
 
       start: () => {
+        armPersist()
         const s = get()
         if (s.status === 'running') return
         const remaining = s.remainingMs > 0 ? s.remainingMs : phaseDurationMs(s.phase, s.settings)
@@ -141,6 +193,7 @@ export const useTimerStore = create<TimerState>()(
       },
 
       pause: () => {
+        armPersist()
         const s = get()
         if (s.status !== 'running' || s.endAt === null) return
         set({
@@ -151,6 +204,7 @@ export const useTimerStore = create<TimerState>()(
       },
 
       reset: () => {
+        armPersist()
         const s = get()
         set({
           status: 'idle',
@@ -160,6 +214,7 @@ export const useTimerStore = create<TimerState>()(
       },
 
       resetSession: () => {
+        armPersist()
         const s = get()
         set({
           phase: 'focus',
@@ -171,6 +226,7 @@ export const useTimerStore = create<TimerState>()(
       },
 
       skip: () => {
+        armPersist()
         const s = get()
         const adv = nextPhase(s, false)
         const duration = phaseDurationMs(adv.phase, s.settings)
@@ -191,7 +247,9 @@ export const useTimerStore = create<TimerState>()(
           set({ remainingMs: remaining })
           return
         }
-        // Phase completed naturally
+        // Phase completed naturally — a milestone of a user-started session,
+        // so it may persist even if this page load had no direct interaction
+        armPersist()
         const adv = nextPhase(s, true)
         const duration = phaseDurationMs(adv.phase, s.settings)
         const daily = freshDaily(s.daily)
@@ -210,6 +268,7 @@ export const useTimerStore = create<TimerState>()(
       },
 
       updateSettings: (patch) => {
+        armPersist()
         const s = get()
         const settings = { ...s.settings, ...patch }
         // If the current phase hasn't started yet, adopt the new duration immediately
@@ -220,6 +279,7 @@ export const useTimerStore = create<TimerState>()(
 
       /** Like updateSettings, but restarts the current phase's countdown from the new duration right away. */
       applySettingsNow: (patch) => {
+        armPersist()
         const s = get()
         const settings = { ...s.settings, ...patch }
         const remainingMs = phaseDurationMs(s.phase, settings)
@@ -231,9 +291,10 @@ export const useTimerStore = create<TimerState>()(
       },
 
       extendFocus: (minutes) => {
+        armPersist()
         const s = get()
         if (s.phase !== 'focus') return
-        const extraMs = Math.round(minutes * 60_000)
+        const extraMs = Math.round(finiteOr(minutes, DEFAULT_SETTINGS.focusExtendMin) * 60_000)
         if (s.status === 'running' && s.endAt !== null) {
           set({ endAt: s.endAt + extraMs, remainingMs: s.remainingMs + extraMs })
         } else {
@@ -241,10 +302,22 @@ export const useTimerStore = create<TimerState>()(
         }
       },
 
-      setScene: (sceneId) => set({ sceneId }),
-      setSoundOn: (soundOn) => set({ soundOn }),
-      setVolume: (volume) => set({ volume: Math.min(1, Math.max(0, volume)) }),
-      dismissComplete: () => set({ justCompletedFocus: false }),
+      setScene: (sceneId) => {
+        armPersist()
+        set({ sceneId })
+      },
+      setSoundOn: (soundOn) => {
+        armPersist()
+        set({ soundOn })
+      },
+      setVolume: (volume) => {
+        armPersist()
+        set({ volume: Math.min(1, Math.max(0, volume)) })
+      },
+      dismissComplete: () => {
+        armPersist()
+        set({ justCompletedFocus: false })
+      },
 
       syncAfterLoad: () => {
         const s = get()
@@ -291,7 +364,8 @@ export const useTimerStore = create<TimerState>()(
       },
     }),
     {
-      name: 'dnd-timer',
+      name: STORAGE_KEY,
+      storage: gatedStorage,
       skipHydration: true,
     }
   )
