@@ -77,11 +77,17 @@ describe('MobileHandoffSheet', () => {
   })
 
   it('tracks close-button dismissals without setting the daily opt-out', () => {
-    render(<MobileHandoffSheet onClose={vi.fn()} />)
+    const onClose = vi.fn()
+    render(<MobileHandoffSheet onClose={onClose} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    const close = screen.getByRole('button', { name: 'Close' })
+    fireEvent.click(close)
+    fireEvent.click(close)
+    act(() => vi.advanceTimersByTime(260))
 
     expect(trackMobileHandoffDismiss).toHaveBeenCalledWith({ method: 'close_button' })
+    expect(trackMobileHandoffDismiss).toHaveBeenCalledOnce()
+    expect(onClose).toHaveBeenCalledOnce()
     expect(localStorage.getItem('dnd-handoff-hide-date')).toBeNull()
   })
 
@@ -105,7 +111,7 @@ describe('MobileHandoffSheet', () => {
   it('keeps the sheet open and does not track when native sharing is cancelled', async () => {
     Object.defineProperty(navigator, 'share', {
       configurable: true,
-      value: vi.fn().mockRejectedValue(new Error('cancelled')),
+      value: vi.fn().mockRejectedValue(new DOMException('cancelled', 'AbortError')),
     })
     const onClose = vi.fn()
     render(<MobileHandoffSheet onClose={onClose} />)
@@ -118,5 +124,26 @@ describe('MobileHandoffSheet', () => {
 
     expect(trackMobileHandoffShare).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('copies the link when native sharing fails for a reason other than cancellation', async () => {
+    Object.defineProperty(navigator, 'share', {
+      configurable: true,
+      value: vi.fn().mockRejectedValue(new DOMException('blocked', 'NotAllowedError')),
+    })
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      value: vi.fn().mockReturnValue(true),
+    })
+    render(<MobileHandoffSheet onClose={vi.fn()} />)
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Send to another device' }))
+      await Promise.resolve()
+    })
+
+    expect(trackMobileHandoffShare).toHaveBeenCalledOnce()
+    expect(screen.getByRole('status').textContent).toContain('Link copied')
+    expect(document.querySelector('textarea')).toBeNull()
   })
 })

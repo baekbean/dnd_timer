@@ -24,7 +24,7 @@ import ResetSessionToast from '@/components/timer/ResetSessionToast'
 import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
 import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
-import { hasHandoffBeenDismissed } from '@/lib/timer/handoffSession'
+import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
@@ -328,15 +328,42 @@ export default function TimerApp() {
   }, [])
 
   // Mobile → desktop/iPad handoff: phones only, ~700ms after the timer screen
-  // is actually in front of the person — so on a first visit it waits for the
-  // settings modal to close, and it never interrupts a running session.
+  // is actually in front of the person, and never over a running session.
+  // Shows once per page load; only "Don't show again today" suppresses it
+  // across loads, so plain closes bring it back on the next visit.
+  const handoffShownRef = useRef(false)
+  const [handoffGateRevision, setHandoffGateRevision] = useState(0)
+
   useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === HANDOFF_HIDE_DATE_KEY) {
+        setHandoffGateRevision((revision) => revision + 1)
+      }
+    }
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
+  }, [])
+
+  useEffect(() => {
+    if (handoffShownRef.current) return
     if (deviceType !== 'mobile') return
     if (settingsOpen || status === 'running' || justCompletedFocus) return
-    if (hasHandoffBeenDismissed()) return
-    const id = setTimeout(() => setHandoffOpen(true), 700)
+    if (isHandoffHiddenToday()) {
+      const now = new Date()
+      const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+      const id = setTimeout(
+        () => setHandoffGateRevision((revision) => revision + 1),
+        nextDay.getTime() - now.getTime()
+      )
+      return () => clearTimeout(id)
+    }
+    const id = setTimeout(() => {
+      if (isHandoffHiddenToday()) return
+      handoffShownRef.current = true
+      setHandoffOpen(true)
+    }, 700)
     return () => clearTimeout(id)
-  }, [deviceType, settingsOpen, status, justCompletedFocus])
+  }, [deviceType, settingsOpen, status, justCompletedFocus, handoffGateRevision])
 
   // If ambient started while the AudioContext was suspended (reload mid-session),
   // the first gesture unlocks it

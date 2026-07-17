@@ -8,12 +8,12 @@ import {
   trackMobileHandoffShare,
   trackMobileHandoffEmailOpen,
   trackMobileHandoffEmailSubmit,
-  trackMobileHandoffCopy,
+  trackMobileHandoffHideToday,
 } from '@/lib/ga'
 import { submitEmailSilently } from '@/lib/constants'
 import {
   hasHandoffBeenViewed,
-  markHandoffDismissed,
+  markHandoffHiddenToday,
   markHandoffViewed,
 } from '@/lib/timer/handoffSession'
 
@@ -50,8 +50,8 @@ async function copyText(text: string): Promise<boolean> {
       // Fall through to the legacy path
     }
   }
+  const ta = document.createElement('textarea')
   try {
-    const ta = document.createElement('textarea')
     ta.value = text
     ta.style.position = 'fixed'
     ta.style.opacity = '0'
@@ -59,10 +59,11 @@ async function copyText(text: string): Promise<boolean> {
     ta.focus()
     ta.select()
     const ok = document.execCommand('copy')
-    document.body.removeChild(ta)
     return ok
   } catch {
     return false
+  } finally {
+    ta.remove()
   }
 }
 
@@ -94,12 +95,14 @@ function CopiedToast() {
 
 /**
  * Mobile → desktop/iPad handoff bottom sheet. Rendered by TimerApp only on
- * phones, after a 700ms delay, and only once per session (gated in
- * lib/timer/handoffSession.ts).
+ * phones, after a 700ms delay, and only once per page view. Cross-page-load
+ * suppression is gated in lib/timer/handoffSession.ts.
  *
  * This does not block or gate mobile usage in any way — every exit path
  * (Close, backdrop, "Continue on mobile") just closes the sheet with no
- * redirect, no login, no feature loss.
+ * redirect, no login, no feature loss. Only "Don't show again today"
+ * suppresses it across page loads; everything else closes this view only,
+ * so the sheet returns on the next visit.
  *
  * "Email me the link" has no sending backend: the address is logged to the
  * Google Form (same silent-POST pattern as the landing-page waitlist) and
@@ -111,7 +114,10 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
   const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
   const [copyToast, setCopyToast] = useState(false)
+  const [actionPending, setActionPending] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const actionPendingRef = useRef(false)
+  const closingRef = useRef(false)
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true))
@@ -131,64 +137,92 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
 
   /** Plays the exit transition, then unmounts. */
   const closeAfter = (delayMs: number) => {
+    if (closingRef.current) return
+    closingRef.current = true
     timerRef.current = setTimeout(() => {
       setVisible(false)
       timerRef.current = setTimeout(onClose, TRANSITION_MS)
     }, delayMs)
   }
 
+  const lockAction = (): boolean => {
+    if (actionPendingRef.current) return false
+    actionPendingRef.current = true
+    setActionPending(true)
+    return true
+  }
+
+  const unlockAction = () => {
+    actionPendingRef.current = false
+    setActionPending(false)
+  }
+
   const handleClose = (method: 'close_button' | 'backdrop') => {
+    if (!lockAction()) return
     trackMobileHandoffDismiss({ method })
-    markHandoffDismissed()
     closeAfter(0)
   }
 
   const handleContinueOnMobile = () => {
+    if (!lockAction()) return
     trackMobileHandoffContinue()
-    markHandoffDismissed()
+    closeAfter(0)
+  }
+
+  const handleHideToday = () => {
+    if (!lockAction()) return
+    trackMobileHandoffHideToday()
+    markHandoffHiddenToday()
     closeAfter(0)
   }
 
   const handlePrimaryShare = async () => {
+    if (!lockAction()) return
     const url = currentUrl()
 
     if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
       try {
         await navigator.share({ title: SHARE_TITLE, text: SHARE_TEXT, url })
-      } catch {
-        // Cancelled from the native share sheet, or blocked — leave this
-        // sheet open, don't track, don't set the session flag.
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          unlockAction()
+          return
+        }
+        // Native sharing can fail for reasons other than cancellation (for
+        // example a permissions policy). Preserve the CTA by copying instead.
+        if (!(await copyText(url))) {
+          unlockAction()
+          return
+        }
+        trackMobileHandoffShare()
+        setCopyToast(true)
+        closeAfter(1400)
         return
       }
       trackMobileHandoffShare()
-      markHandoffDismissed()
       closeAfter(0)
       return
     }
 
     // Web Share API unsupported → fall back straight to copying the link.
-    if (!(await copyText(url))) return
+    if (!(await copyText(url))) {
+      unlockAction()
+      return
+    }
     trackMobileHandoffShare()
-    markHandoffDismissed()
-    setCopyToast(true)
-    closeAfter(1400)
-  }
-
-  const handleCopyLink = async () => {
-    if (!(await copyText(currentUrl()))) return
-    trackMobileHandoffCopy()
-    markHandoffDismissed()
     setCopyToast(true)
     closeAfter(1400)
   }
 
   const handleEmailOpen = () => {
+    if (actionPendingRef.current) return
     trackMobileHandoffEmailOpen()
     setEmailState('input')
   }
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (actionPendingRef.current) return
     const trimmed = email.trim()
     if (!isValidEmail(trimmed)) {
       setEmailError(true)
@@ -198,7 +232,6 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
     submitEmailSilently(trimmed)
     window.location.href = buildMailtoUrl(trimmed, currentUrl())
     trackMobileHandoffEmailSubmit()
-    markHandoffDismissed()
     // Success stays visible — the person dismisses manually via Close /
     // backdrop / Continue on mobile after sending from their mail app.
     setEmailState('success')
@@ -217,7 +250,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Best experienced on a bigger screen"
+        aria-label="Looks even better on a bigger screen"
         className="relative w-full max-w-[480px] rounded-t-[28px] bg-[#F6F6F3] px-6 pb-[max(24px,env(safe-area-inset-bottom))] pt-6 shadow-[0px_-4px_24px_rgba(0,0,0,0.15)] transition-transform duration-300 ease-out"
         style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)' }}
       >
@@ -225,7 +258,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
 
         <div className="mb-1 flex items-start justify-between gap-4">
           <h2 className="font-aspekta text-[17px] leading-snug text-[#343434]">
-            Best experienced on a bigger screen
+            Looks even better on a bigger screen
           </h2>
           <button
             type="button"
@@ -238,15 +271,18 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
         </div>
 
         <div className="mb-6 flex flex-col gap-1 font-pretendard text-[14px] leading-relaxed text-[#343434]/65">
-          <p>DnD Timer is designed for desktop and iPad.</p>
-          <p>Continue your focus session on a bigger screen whenever you&apos;re ready.</p>
+          <p>DnD Timer is designed for desktop and iPad, where it feels most at home.</p>
+          <p>
+            Continue your focus session on a bigger screen whenever you&apos;re ready. 😊
+          </p>
         </div>
 
         <div className="flex flex-col gap-3">
           <button
             type="button"
             onClick={handlePrimaryShare}
-            className="w-full rounded-full bg-[#343434] px-5 py-3 font-pretendard text-[15px] text-[#F6F6F3] transition-opacity hover:opacity-90"
+            disabled={actionPending}
+            className="w-full rounded-full bg-[#343434] px-5 py-3 font-pretendard text-[15px] text-[#F6F6F3] transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             Send to another device
           </button>
@@ -256,6 +292,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
               <button
                 type="button"
                 onClick={handleEmailOpen}
+                disabled={actionPending}
                 className="w-full rounded-full border border-[#343434]/15 px-5 py-3 font-pretendard text-[15px] text-[#343434] transition-colors hover:bg-[#343434]/5"
               >
                 Email me the link
@@ -277,6 +314,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
                     inputMode="email"
                     autoFocus
                     required
+                    disabled={actionPending}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
@@ -284,7 +322,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
                   />
                   <button
                     type="submit"
-                    disabled={!email.trim()}
+                    disabled={actionPending || !email.trim()}
                     className="shrink-0 whitespace-nowrap rounded-full bg-[#74856E] px-4 py-2 font-pretendard text-[13px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
                   >
                     Send link
@@ -310,18 +348,20 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
 
           <button
             type="button"
-            onClick={handleCopyLink}
-            className="mx-auto font-pretendard text-[13px] text-[#343434]/55 underline underline-offset-4 transition-colors hover:text-[#343434]"
+            onClick={handleContinueOnMobile}
+            disabled={actionPending}
+            className="mx-auto pt-1 font-pretendard text-[13px] text-[#343434]/55 underline underline-offset-4 transition-colors hover:text-[#343434]"
           >
-            Copy link
+            Continue on mobile
           </button>
 
           <button
             type="button"
-            onClick={handleContinueOnMobile}
-            className="mx-auto pt-1 font-pretendard text-[13px] text-[#343434]/40 transition-colors hover:text-[#343434]/70"
+            onClick={handleHideToday}
+            disabled={actionPending}
+            className="mx-auto font-pretendard text-[12px] text-[#343434]/40 transition-colors hover:text-[#343434]/70"
           >
-            Continue on mobile
+            Don&apos;t show again today
           </button>
         </div>
       </div>
