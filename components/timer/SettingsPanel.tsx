@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { FEEDBACK_FORM_URL, submitFeedbackSilently } from '@/lib/constants'
+import { submitFeedbackSilently } from '@/lib/constants'
 import { trackFeedbackClick, trackFeedbackSubmit } from '@/lib/ga'
 import { useTimerStore, type TimerSettings, type Phase } from '@/lib/timer/store'
 
@@ -186,10 +186,6 @@ function FeedbackLink() {
     e.preventDefault()
     trackFeedbackSubmit({ page: 'timer' })
     submitFeedbackSilently(text)
-    // Also opens the real form so the person can add more detail if they
-    // want, and so feedback still reaches us even before the silent-POST
-    // entry IDs above are filled in.
-    window.open(FEEDBACK_FORM_URL, '_blank', 'noopener,noreferrer')
     setSent(true)
   }
 

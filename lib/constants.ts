@@ -28,14 +28,8 @@ export function submitEmailSilently(email: string): void {
 }
 
 // ── feedback form ────────────────────────────────────────────────
-// TODO: FEEDBACK_FORM_ID and FEEDBACK_TEXT_ENTRY are not filled in yet.
-// Get them via: open the feedback form -> "..." menu -> "Get pre-filled
-// link" -> put a dummy value in the text field -> "Get Link". The
-// resulting URL is https://docs.google.com/forms/d/e/<FORM_ID>/viewform?usp=pp_url&entry.<N>=dummy
-// Until these are set, submitFeedbackSilently() is a safe no-op — the
-// visible form (FEEDBACK_FORM_URL) still opens normally as a fallback.
-const FEEDBACK_FORM_ID = ''
-const FEEDBACK_TEXT_ENTRY = ''
+const FEEDBACK_FORM_ID = '1FAIpQLSeHdtwjctUiE2iILTAF1Vcle797r-dLv6jmNMAPCh4Nsk6qmg'
+const FEEDBACK_TEXT_ENTRY = 'entry.356039200'
 
 const FEEDBACK_FORM_SUBMIT_URL: string = FEEDBACK_FORM_ID
   ? `https://docs.google.com/forms/d/e/${FEEDBACK_FORM_ID}/formResponse`
