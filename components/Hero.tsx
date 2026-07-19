@@ -6,6 +6,7 @@ import { track } from '@vercel/analytics'
 import { buildFormUrl, submitEmailSilently } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
 import SectionTracker from '@/components/SectionTracker'
+import posthog from 'posthog-js'
 
 const TOTAL_SECONDS = 25 * 60
 
@@ -190,6 +191,7 @@ export default function Hero() {
     e.preventDefault()
     track('join_waitlist', { location: 'hero', email })
     trackWaitlistClick({ button_location: 'hero', button_text: 'Join waitlist' })
+    posthog.capture('waitlist_click', { button_location: 'hero', button_text: 'Join waitlist' })
     submitEmailSilently(email)
     const url = buildFormUrl(email)
     if (url !== '#') {

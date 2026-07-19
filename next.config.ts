@@ -4,6 +4,24 @@ const nextConfig: NextConfig = {
   // Dev-only: lets phones on the local network load dev-server assets (HMR,
   // hydration bundles) when visiting via the machine's LAN IP. No effect in prod.
   allowedDevOrigins: ["192.168.18.107"],
+  async rewrites() {
+    return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
+    ];
+  },
+  // Required to support PostHog trailing slash API requests
+  skipTrailingSlashRedirect: true,
   async headers() {
     return [
       {
