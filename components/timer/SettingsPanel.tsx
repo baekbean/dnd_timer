@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { submitFeedbackSilently } from '@/lib/constants'
 import { trackFeedbackClick, trackFeedbackSubmit } from '@/lib/ga'
 import { useTimerStore, type TimerSettings, type Phase } from '@/lib/timer/store'
+import posthog from 'posthog-js'
 
 type TimingKey = 'focusMin' | 'shortBreakMin' | 'sessionsPerCycle'
 type TimingDraft = Pick<TimerSettings, TimingKey>
@@ -185,6 +186,7 @@ function FeedbackLink() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     trackFeedbackSubmit({ page: 'timer' })
+    posthog.capture('feedback_submit', { page: 'timer' })
     submitFeedbackSilently(text)
     setSent(true)
   }
@@ -255,6 +257,7 @@ export default function SettingsPanel({ onClose }: Props) {
     }
 
     updateSettings(patch)
+    posthog.capture('settings_saved', patch)
     onClose()
   }
 
@@ -265,6 +268,7 @@ export default function SettingsPanel({ onClose }: Props) {
       } else {
         updateSettings(pending)
       }
+      posthog.capture('settings_saved', { ...pending, apply_mode: mode })
     }
     setPending(null)
     onClose()

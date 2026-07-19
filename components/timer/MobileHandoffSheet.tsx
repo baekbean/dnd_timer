@@ -16,6 +16,7 @@ import {
   markHandoffHiddenToday,
   markHandoffViewed,
 } from '@/lib/timer/handoffSession'
+import posthog from 'posthog-js'
 
 const SHARE_TITLE = 'DnD Timer'
 const SHARE_TEXT = 'Continue your focus session on desktop or iPad.'
@@ -200,6 +201,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
         return
       }
       trackMobileHandoffShare()
+      posthog.capture('mobile_handoff_share', { method: 'share_api' })
       closeAfter(0)
       return
     }
@@ -210,6 +212,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
       return
     }
     trackMobileHandoffShare()
+    posthog.capture('mobile_handoff_share', { method: 'copy_fallback' })
     setCopyToast(true)
     closeAfter(1400)
   }
