@@ -3,6 +3,7 @@
 import { SCENES } from '@/lib/timer/scenes'
 import { useTimerStore } from '@/lib/timer/store'
 import { trackSceneChange } from '@/lib/ga'
+import posthog from 'posthog-js'
 
 export default function ScenePicker() {
   const sceneId = useTimerStore((s) => s.sceneId)
@@ -20,7 +21,10 @@ export default function ScenePicker() {
             aria-pressed={active}
             title={scene.name}
             onClick={() => {
-              if (scene.id !== sceneId) trackSceneChange({ scene_id: scene.id })
+              if (scene.id !== sceneId) {
+                trackSceneChange({ scene_id: scene.id })
+                posthog.capture('scene_change', { scene_id: scene.id })
+              }
               setScene(scene.id)
             }}
             className="h-10 w-[60px] rounded-xl bg-cover bg-center transition-all"
