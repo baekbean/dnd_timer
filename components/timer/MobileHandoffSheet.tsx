@@ -16,6 +16,7 @@ import {
   markHandoffDismissed,
   markHandoffViewed,
 } from '@/lib/timer/handoffSession'
+import posthog from 'posthog-js'
 
 const SHARE_TITLE = 'DnD Timer'
 const SHARE_TEXT = 'Continue your focus session on desktop or iPad.'
@@ -161,6 +162,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
         return
       }
       trackMobileHandoffShare()
+      posthog.capture('mobile_handoff_share', { method: 'share_api' })
       markHandoffDismissed()
       closeAfter(0)
       return
@@ -169,6 +171,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
     // Web Share API unsupported → fall back straight to copying the link.
     if (!(await copyText(url))) return
     trackMobileHandoffShare()
+    posthog.capture('mobile_handoff_share', { method: 'copy_fallback' })
     markHandoffDismissed()
     setCopyToast(true)
     closeAfter(1400)

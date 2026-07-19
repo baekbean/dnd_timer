@@ -11,6 +11,7 @@ import {
   trackFocusExtend,
   trackSoundToggle,
 } from '@/lib/ga'
+import posthog from 'posthog-js'
 import { getScene } from '@/lib/timer/scenes'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
@@ -223,6 +224,7 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
         onClick={() => {
           extendFocus(focusExtendMin)
           trackFocusExtend({ minutes: focusExtendMin })
+          posthog.capture('focus_extend', { minutes: focusExtendMin })
           onExtend(focusExtendMin)
           setFloats((prev) => [...prev, { id: Date.now() + Math.random(), minutes: focusExtendMin }])
         }}
@@ -385,10 +387,14 @@ export default function TimerApp() {
     prevCompletionsRef.current = completions
     if (prev === null || completions <= prev) return
 
+    const completedPhase = lastCompletedPhase ?? 'focus'
+    const sessionsCompleted = useTimerStore.getState().daily.completedSessions
     trackSessionComplete({
-      completed_phase: lastCompletedPhase ?? 'focus',
-      sessions_today: useTimerStore.getState().daily.completedSessions,
+      completed_phase: completedPhase,
+      sessions_today: sessionsCompleted,
     })
+    const phaseEvent = completedPhase === 'focus' ? 'focus_complete' : 'break_complete'
+    posthog.capture(phaseEvent, { completed_phase: completedPhase, sessions_today: sessionsCompleted })
 
     if (soundOn) soundEngine.playChime()
 
@@ -413,6 +419,7 @@ export default function TimerApp() {
       pause()
     } else {
       trackTimerStart({ phase, scene_id: sceneId, focus_min: settings.focusMin })
+      posthog.capture('timer_start', { phase, scene_id: sceneId, focus_min: settings.focusMin })
       start()
     }
   }
@@ -420,6 +427,7 @@ export default function TimerApp() {
   const abandonIfMidFocus = (via: 'reset' | 'skip') => {
     if (phase === 'focus' && status !== 'idle') {
       trackSessionAbandon({ via, remaining_ms: remainingMs })
+      posthog.capture('session_abandon', { via, remaining_ms: remainingMs })
     }
   }
 
@@ -441,7 +449,10 @@ export default function TimerApp() {
   }
 
   const handleFullscreen = () => {
-    if (!isFullscreen) trackFullscreenEnter()
+    if (!isFullscreen) {
+      trackFullscreenEnter()
+      posthog.capture('fullscreen_enter', {})
+    }
     toggleFullscreen()
   }
 
@@ -476,6 +487,7 @@ export default function TimerApp() {
           aria-pressed={soundOn}
           onClick={() => {
             trackSoundToggle({ sound_on: !soundOn })
+            posthog.capture('sound_change', { sound_on: !soundOn })
             setSoundOn(!soundOn)
           }}
           className="flex items-center gap-2 rounded-md px-3 py-2 transition-opacity hover:opacity-90"
