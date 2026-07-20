@@ -223,9 +223,11 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (actionPendingRef.current) return
+    actionPendingRef.current = true
     const trimmed = email.trim()
     if (!isValidEmail(trimmed)) {
       setEmailError(true)
+      actionPendingRef.current = false
       return
     }
     setEmailError(false)
@@ -235,6 +237,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
     // Success stays visible — the person dismisses manually via Close /
     // backdrop / Continue on mobile after sending from their mail app.
     setEmailState('success')
+    actionPendingRef.current = false
   }
 
   return (
@@ -293,7 +296,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
                 type="button"
                 onClick={handleEmailOpen}
                 disabled={actionPending}
-                className="w-full rounded-full border border-[#343434]/15 px-5 py-3 font-pretendard text-[15px] text-[#343434] transition-colors hover:bg-[#343434]/5"
+                className="w-full rounded-full border border-[#343434]/15 px-5 py-3 font-pretendard text-[15px] text-[#343434] transition-colors hover:bg-[#343434]/5 disabled:opacity-60"
               >
                 Email me the link
               </button>
