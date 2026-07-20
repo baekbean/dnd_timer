@@ -176,7 +176,7 @@ export function trackMobileHandoffEmailSubmit() {
   gtagEvent('mobile_handoff_email_submit', getHandoffContext())
 }
 
-/** Tertiary "Copy link" — fires only once the clipboard write resolves. */
-export function trackMobileHandoffCopy() {
-  gtagEvent('mobile_handoff_copy', getHandoffContext())
+/** "Don't show again today" — the only action that suppresses the sheet across visits. */
+export function trackMobileHandoffHideToday() {
+  gtagEvent('mobile_handoff_hide_today', getHandoffContext())
 }
