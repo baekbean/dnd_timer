@@ -33,7 +33,7 @@ export default function Footer() {
           <p className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4]">
             © 2026 Do not Disturb Timer
             <span className="mx-2">·</span>
-            <a href="/timer" className="hover:underline transition-opacity hover:opacity-60">
+            <a href="/" className="hover:underline transition-opacity hover:opacity-60">
               Try the timer (beta)
             </a>
           </p>

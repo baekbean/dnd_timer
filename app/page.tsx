@@ -1,19 +1,10 @@
-import Nav from '@/components/Nav'
-import Hero from '@/components/Hero'
-import Section1 from '@/components/Section1'
-import Section2 from '@/components/Section2'
-import Section3 from '@/components/Section3'
-import Footer from '@/components/Footer'
+import type { Metadata } from 'next'
+import TimerApp from '@/components/timer/TimerApp'
+
+export const metadata: Metadata = {
+  title: 'Do Not Disturb Timer',
+}
 
 export default function Home() {
-  return (
-    <main>
-      <Nav />
-      <Hero />
-      <Section2 />
-      <Section1 />
-      <Section3 />
-      <Footer />
-    </main>
-  )
+  return <TimerApp />
 }

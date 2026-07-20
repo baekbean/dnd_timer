@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Do Not Disturb Timer',
     short_name: 'DND Timer',
     description: 'A focus timer that belongs on your desk.',
-    start_url: '/timer',
+    start_url: '/',
     scope: '/',
     display: 'standalone',
     orientation: 'any',
