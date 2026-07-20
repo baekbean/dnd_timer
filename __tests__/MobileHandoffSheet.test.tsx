@@ -1,9 +1,11 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
 import {
   trackMobileHandoffContinue,
   trackMobileHandoffDismiss,
+  trackMobileHandoffEmailOpen,
+  trackMobileHandoffEmailSubmit,
   trackMobileHandoffHideToday,
   trackMobileHandoffShare,
   trackMobileHandoffView,
@@ -124,6 +126,52 @@ describe('MobileHandoffSheet', () => {
 
     expect(trackMobileHandoffShare).not.toHaveBeenCalled()
     expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('tracks backdrop dismissal without setting the daily opt-out', () => {
+    const onClose = vi.fn()
+    render(<MobileHandoffSheet onClose={onClose} />)
+
+    const backdrop = screen.getByRole('button', { name: 'Dismiss' })
+    fireEvent.click(backdrop)
+    act(() => vi.advanceTimersByTime(260))
+
+    expect(trackMobileHandoffDismiss).toHaveBeenCalledWith({ method: 'backdrop' })
+    expect(localStorage.getItem('dnd-handoff-hide-date')).toBeNull()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it('reveals the email input when "Email me the link" is clicked', () => {
+    render(<MobileHandoffSheet onClose={vi.fn()} />)
+
+    expect(screen.queryByLabelText('Email address')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Email me the link' }))
+
+    expect(screen.getByLabelText('Email address')).toBeTruthy()
+    expect(trackMobileHandoffEmailOpen).toHaveBeenCalledOnce()
+  })
+
+  it('shows an inline error and does not submit when an invalid email is entered', () => {
+    render(<MobileHandoffSheet onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Email me the link' }))
+
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'not-an-email' } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Send link' }).closest('form')!)
+
+    expect(screen.getByText(/doesn't look like an email/)).toBeTruthy()
+    expect(trackMobileHandoffEmailSubmit).not.toHaveBeenCalled()
+  })
+
+  it('shows the success state and fires the submit event when a valid email is entered', () => {
+    Object.defineProperty(window, 'location', { configurable: true, writable: true, value: { href: 'http://localhost' } })
+    render(<MobileHandoffSheet onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Email me the link' }))
+
+    fireEvent.change(screen.getByLabelText('Email address'), { target: { value: 'user@example.com' } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Send link' }).closest('form')!)
+
+    expect(trackMobileHandoffEmailSubmit).toHaveBeenCalledOnce()
+    expect(screen.getByText('Almost there!')).toBeTruthy()
   })
 
   it('copies the link when native sharing fails for a reason other than cancellation', async () => {
