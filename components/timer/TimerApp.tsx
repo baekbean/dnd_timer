@@ -247,12 +247,19 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
 
 function useFullscreen() {
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // iPhone Safari has no Fullscreen API for non-video elements (iPadOS 16.4+
+  // and other browsers do) — detect support so the button can hide itself
+  // instead of sitting there doing nothing when tapped.
+  const [isSupported] = useState(
+    () => typeof document !== 'undefined' && typeof document.documentElement.requestFullscreen === 'function'
+  )
 
   useEffect(() => {
+    if (!isSupported) return
     const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [])
+  }, [isSupported])
 
   const toggle = () => {
     try {
@@ -261,11 +268,11 @@ function useFullscreen() {
         : document.documentElement.requestFullscreen?.()
       result?.catch?.(() => {})
     } catch {
-      // Fullscreen API unsupported or blocked (e.g. Safari <16.4 returns no promise)
+      // Fullscreen API unsupported or blocked
     }
   }
 
-  return { isFullscreen, toggle }
+  return { isFullscreen, isSupported, toggle }
 }
 
 export default function TimerApp() {
@@ -294,7 +301,7 @@ export default function TimerApp() {
   const [showResetToast, setShowResetToast] = useState(false)
   const [handoffOpen, setHandoffOpen] = useState(false)
   const deviceType = useDeviceType()
-  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
+  const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
 
   // Brief scale pulse on the digits whenever the user extends the focus session
@@ -521,15 +528,17 @@ export default function TimerApp() {
 
       {/* Fullscreen + settings — top right */}
       <div className={`absolute right-6 top-6 flex items-center gap-3 ${chromeClass}`}>
-        <button
-          type="button"
-          aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-          onClick={handleFullscreen}
-          className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
-          style={{ background: 'rgba(44,44,44,0.25)' }}
-        >
-          <FullscreenIcon active={isFullscreen} />
-        </button>
+        {fullscreenSupported && (
+          <button
+            type="button"
+            aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+            onClick={handleFullscreen}
+            className="flex h-11 w-11 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            style={{ background: 'rgba(44,44,44,0.25)' }}
+          >
+            <FullscreenIcon active={isFullscreen} />
+          </button>
+        )}
         <button
           type="button"
           aria-label="Settings"
