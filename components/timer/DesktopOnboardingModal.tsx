@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type BrowserType = 'ios' | 'safari-mac' | 'firefox' | 'chromium' | 'other'
 
@@ -61,11 +61,12 @@ export default function DesktopOnboardingModal({ onClose }: { onClose: () => voi
   const browser = detectBrowser()
   const { title, steps } = CONTENT[browser]
   const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const [shareSupported] = useState(
+    () => browser === 'ios' && typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  )
 
-  // Focus trap — keep keyboard nav inside the modal
   useEffect(() => {
     closeButtonRef.current?.focus()
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
@@ -73,9 +74,18 @@ export default function DesktopOnboardingModal({ onClose }: { onClose: () => voi
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: 'Do Not Disturb Timer',
+        url: window.location.href,
+      })
+    } catch {
+      // User cancelled or share failed — leave modal open
+    }
+  }
+
   return (
-    // Backdrop — pointer-events blocked so clicks pass to the modal card only,
-    // not the backdrop. Intentionally no onClick dismiss.
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -135,6 +145,23 @@ export default function DesktopOnboardingModal({ onClose }: { onClose: () => voi
             </li>
           ))}
         </ol>
+
+        {/* iOS Share CTA — only shown when Web Share API is available */}
+        {shareSupported && (
+          <button
+            type="button"
+            onClick={handleShare}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 font-pretendard text-[13px] font-semibold text-[#1c1c1c] transition-opacity hover:opacity-90 active:opacity-75"
+            style={{ background: 'rgba(246,246,243,0.92)' }}
+          >
+            {/* iOS Share icon */}
+            <svg width="14" height="16" viewBox="0 0 14 18" fill="none">
+              <path d="M7 1v11M3 4L7 1l4 3" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 9v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+            Open Share Sheet
+          </button>
+        )}
       </div>
     </div>
   )
