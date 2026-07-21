@@ -23,9 +23,15 @@ import ScenePicker from '@/components/timer/ScenePicker'
 import CompleteOverlay from '@/components/timer/CompleteOverlay'
 import ResetSessionToast from '@/components/timer/ResetSessionToast'
 import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
+import DesktopOnboardingSnackbar from '@/components/timer/DesktopOnboardingSnackbar'
 import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
 import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
+import {
+  hasDesktopOnboardingShownToday,
+  markDesktopOnboardingShownToday,
+} from '@/lib/timer/desktopOnboardingSession'
+import { trackDesktopOnboardingView } from '@/lib/ga'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
@@ -302,6 +308,7 @@ export default function TimerApp() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [showResetToast, setShowResetToast] = useState(false)
   const [handoffOpen, setHandoffOpen] = useState(false)
+  const [desktopSnackbarOpen, setDesktopSnackbarOpen] = useState(false)
   const deviceType = useDeviceType()
   const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
@@ -373,6 +380,68 @@ export default function TimerApp() {
     }, 700)
     return () => clearTimeout(id)
   }, [deviceType, settingsOpen, status, justCompletedFocus, handoffGateRevision])
+
+  // Desktop/iPad → "Add to Home Screen" snackbar. Non-modal, so it can sit
+  // alongside SettingsPanel — no sequencing needed. Shown at most once a
+  // calendar day (lib/timer/desktopOnboardingSession.ts), never while a
+  // focus session is actively running, and never at all if the page is
+  // already running as an installed PWA.
+  //
+  // phase/status are read via refs inside the deferred callbacks below —
+  // the plain destructured values would be stale by the time the 700ms
+  // timeout fires, since the closure captures them at effect-setup time.
+  const phaseRef = useRef(phase)
+  const statusRef = useRef(status)
+  useEffect(() => {
+    phaseRef.current = phase
+    statusRef.current = status
+  }, [phase, status])
+
+  const desktopSnackbarHandledRef = useRef(false)
+
+  const isRunningAsInstalledApp = () =>
+    typeof window !== 'undefined' &&
+    (window.matchMedia?.('(display-mode: standalone)').matches ||
+      (window.navigator as { standalone?: boolean }).standalone === true)
+
+  const showDesktopSnackbarIfEligible = () => {
+    if (desktopSnackbarHandledRef.current) return
+    if (deviceType !== 'desktop' && deviceType !== 'tablet') return
+    if (isRunningAsInstalledApp()) {
+      desktopSnackbarHandledRef.current = true
+      return
+    }
+    if (hasDesktopOnboardingShownToday()) {
+      desktopSnackbarHandledRef.current = true
+      return
+    }
+    desktopSnackbarHandledRef.current = true
+    markDesktopOnboardingShownToday()
+    trackDesktopOnboardingView()
+    setDesktopSnackbarOpen(true)
+  }
+
+  // Trigger 1 — fresh entry, 700ms after mount
+  useEffect(() => {
+    if (deviceType == null) return
+    const id = setTimeout(() => {
+      if (phaseRef.current === 'focus' && statusRef.current === 'running') return // trigger 2 catches it later
+      showDesktopSnackbarIfEligible()
+    }, 700)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceType])
+
+  // Trigger 2 — fallback for a page load that landed mid-focus-run (a
+  // persisted session resumed). Fires on any non-running moment afterward
+  // (paused, or idle once it completes) rather than strictly "paused", so
+  // a session that runs straight through to completion still gets a shot.
+  useEffect(() => {
+    if (phase === 'focus' && status === 'running') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- showDesktopSnackbarIfEligible gates on refs/localStorage before setting state; no external subscription pattern fits.
+    showDesktopSnackbarIfEligible()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, status])
 
   // If ambient started while the AudioContext was suspended (reload mid-session),
   // the first gesture unlocks it
@@ -677,6 +746,9 @@ export default function TimerApp() {
         <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
       )}
       {handoffOpen && <MobileHandoffSheet onClose={() => setHandoffOpen(false)} />}
+      {desktopSnackbarOpen && (
+        <DesktopOnboardingSnackbar onClose={() => setDesktopSnackbarOpen(false)} />
+      )}
     </main>
   )
 }

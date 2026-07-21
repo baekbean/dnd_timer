@@ -180,3 +180,18 @@ export function trackMobileHandoffEmailSubmit() {
 export function trackMobileHandoffHideToday() {
   gtagEvent('mobile_handoff_hide_today', getHandoffContext())
 }
+
+// ── desktop/iPad onboarding ("Add to Home Screen" snackbar) ──────
+export function trackDesktopOnboardingView() {
+  gtagEvent('desktop_onboarding_prompt_view', getHandoffContext())
+}
+
+export function trackDesktopOnboardingDismiss(params: {
+  method: 'close_button' | 'outside_click' | 'escape' | 'auto'
+}) {
+  gtagEvent('desktop_onboarding_prompt_dismiss', { ...getHandoffContext(), ...params })
+}
+
+export function trackDesktopOnboardingInstall(params: { outcome: 'accepted' | 'dismissed' }) {
+  gtagEvent('desktop_onboarding_install', { ...getHandoffContext(), ...params })
+}
