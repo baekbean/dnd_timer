@@ -27,10 +27,6 @@ import DesktopOnboardingSnackbar from '@/components/timer/DesktopOnboardingSnack
 import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
 import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
-import {
-  hasDesktopOnboardingShownToday,
-  markDesktopOnboardingShownToday,
-} from '@/lib/timer/desktopOnboardingSession'
 import { trackDesktopOnboardingView } from '@/lib/ga'
 
 const PHASE_LABEL: Record<Phase, string> = {
@@ -411,12 +407,7 @@ export default function TimerApp() {
       desktopSnackbarHandledRef.current = true
       return
     }
-    if (hasDesktopOnboardingShownToday()) {
-      desktopSnackbarHandledRef.current = true
-      return
-    }
     desktopSnackbarHandledRef.current = true
-    markDesktopOnboardingShownToday()
     trackDesktopOnboardingView()
     setDesktopSnackbarOpen(true)
   }
