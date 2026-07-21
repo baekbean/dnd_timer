@@ -409,6 +409,7 @@ export default function TimerApp() {
     }
     desktopSnackbarHandledRef.current = true
     trackDesktopOnboardingView()
+    posthog.capture('desktop_onboarding_prompt_view')
     setDesktopSnackbarOpen(true)
   }
 

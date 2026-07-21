@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { trackDesktopOnboardingShareClick, trackDesktopOnboardingShareOutcome } from '@/lib/ga'
+import posthog from 'posthog-js'
 
 type BrowserType = 'ios' | 'safari-mac' | 'firefox' | 'chromium' | 'other'
 
@@ -75,13 +77,18 @@ export default function DesktopOnboardingModal({ onClose }: { onClose: () => voi
   }, [onClose])
 
   const handleShare = async () => {
+    trackDesktopOnboardingShareClick()
+    posthog.capture('desktop_onboarding_share_click')
     try {
       await navigator.share({
         title: 'Do Not Disturb Timer',
         url: window.location.href,
       })
+      trackDesktopOnboardingShareOutcome({ outcome: 'shared' })
+      posthog.capture('desktop_onboarding_share_outcome', { outcome: 'shared' })
     } catch {
-      // User cancelled or share failed — leave modal open
+      trackDesktopOnboardingShareOutcome({ outcome: 'cancelled' })
+      posthog.capture('desktop_onboarding_share_outcome', { outcome: 'cancelled' })
     }
   }
 

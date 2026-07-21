@@ -195,3 +195,15 @@ export function trackDesktopOnboardingDismiss(params: {
 export function trackDesktopOnboardingInstall(params: { outcome: 'accepted' | 'dismissed' }) {
   gtagEvent('desktop_onboarding_install', { ...getHandoffContext(), ...params })
 }
+
+export function trackDesktopOnboardingModalOpen() {
+  gtagEvent('desktop_onboarding_modal_open', getHandoffContext())
+}
+
+export function trackDesktopOnboardingShareClick() {
+  gtagEvent('desktop_onboarding_share_click', getHandoffContext())
+}
+
+export function trackDesktopOnboardingShareOutcome(params: { outcome: 'shared' | 'cancelled' }) {
+  gtagEvent('desktop_onboarding_share_outcome', { ...getHandoffContext(), ...params })
+}

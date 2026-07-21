@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { trackDesktopOnboardingDismiss, trackDesktopOnboardingInstall } from '@/lib/ga'
+import { trackDesktopOnboardingDismiss, trackDesktopOnboardingInstall, trackDesktopOnboardingModalOpen } from '@/lib/ga'
 import { useAddToHomeScreen } from '@/lib/timer/useAddToHomeScreen'
 import DesktopOnboardingModal from '@/components/timer/DesktopOnboardingModal'
 import posthog from 'posthog-js'
@@ -60,6 +60,7 @@ export default function DesktopOnboardingSnackbar({ onClose }: { onClose: () => 
     const id = setTimeout(() => {
       if (modalOpenRef.current) return
       trackDesktopOnboardingDismiss({ method: 'auto' })
+      posthog.capture('desktop_onboarding_prompt_dismiss', { method: 'auto' })
       closeNow()
     }, AUTO_DISMISS_MS)
     return () => clearTimeout(id)
@@ -73,6 +74,7 @@ export default function DesktopOnboardingSnackbar({ onClose }: { onClose: () => 
       if (Date.now() - mountedAtRef.current < DISMISS_GRACE_MS) return
       if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
         trackDesktopOnboardingDismiss({ method: 'outside_click' })
+        posthog.capture('desktop_onboarding_prompt_dismiss', { method: 'outside_click' })
         closeNow()
       }
     }
@@ -80,6 +82,7 @@ export default function DesktopOnboardingSnackbar({ onClose }: { onClose: () => 
       if (modalOpenRef.current) return
       if (e.key === 'Escape') {
         trackDesktopOnboardingDismiss({ method: 'escape' })
+        posthog.capture('desktop_onboarding_prompt_dismiss', { method: 'escape' })
         closeNow()
       }
     }
@@ -94,6 +97,7 @@ export default function DesktopOnboardingSnackbar({ onClose }: { onClose: () => 
 
   const handleClose = () => {
     trackDesktopOnboardingDismiss({ method: 'close_button' })
+    posthog.capture('desktop_onboarding_prompt_dismiss', { method: 'close_button' })
     closeNow()
   }
 
@@ -107,6 +111,8 @@ export default function DesktopOnboardingSnackbar({ onClose }: { onClose: () => 
       if (outcome === 'accepted') closeNow()
     } else {
       // Safari / Firefox / other — open step-by-step instructions modal
+      trackDesktopOnboardingModalOpen()
+      posthog.capture('desktop_onboarding_modal_open')
       setModalOpen(true)
     }
   }
