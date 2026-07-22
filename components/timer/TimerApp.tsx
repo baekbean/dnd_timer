@@ -26,6 +26,7 @@ import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
 import DesktopOnboardingSnackbar from '@/components/timer/DesktopOnboardingSnackbar'
 import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
+import { useLandscape } from '@/lib/timer/useLandscape'
 import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
 import { trackDesktopOnboardingView } from '@/lib/ga'
 
@@ -258,6 +259,7 @@ function useFullscreen() {
 
   useEffect(() => {
     const supported = typeof document.documentElement.requestFullscreen === 'function'
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-guard: detects fullscreen API support after hydration; server always starts false; one extra render is intentional
     setIsSupported(supported)
     if (!supported) return
     const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
@@ -306,6 +308,7 @@ export default function TimerApp() {
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [desktopSnackbarOpen, setDesktopSnackbarOpen] = useState(false)
   const deviceType = useDeviceType()
+  const isLandscape = useLandscape()
   const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
   const scene = getScene(sceneId)
 
@@ -575,7 +578,7 @@ export default function TimerApp() {
       <SceneBackground scene={scene} />
 
       {/* Sound — top left, hero-mockup pill */}
-      <div className={`absolute left-6 top-6 ${chromeClass}`}>
+      <div className={`absolute left-6 ${isLandscape ? 'top-3' : 'top-6'} ${chromeClass}`}>
         <button
           type="button"
           aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
@@ -600,7 +603,7 @@ export default function TimerApp() {
       </div>
 
       {/* Fullscreen + settings — top right */}
-      <div className={`absolute right-6 top-6 flex items-center gap-3 ${chromeClass}`}>
+      <div className={`absolute right-6 ${isLandscape ? 'top-3' : 'top-6'} flex items-center gap-3 ${chromeClass}`}>
         {fullscreenSupported && (
           <button
             type="button"
@@ -624,7 +627,7 @@ export default function TimerApp() {
       </div>
 
       {/* Timer */}
-      <div className="relative flex flex-col items-center gap-6 md:gap-10">
+      <div className={`relative flex flex-col items-center ${isLandscape ? 'gap-2' : 'gap-6 md:gap-10'}`}>
         <div className="flex flex-col items-center gap-2">
           <p className="text-[15px] leading-none text-[#f5f5f5] md:text-[18px]">{phaseLabel}</p>
           {settings.sessionsPerCycle > 1 && (
@@ -662,7 +665,9 @@ export default function TimerApp() {
           const digitStyle = {
             fontFamily: 'var(--font-din-condensed)',
             fontWeight: 700,
-            fontSize: `clamp(${Math.round(96 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(480 * scale)}px)`,
+            fontSize: isLandscape
+              ? `min(clamp(${Math.round(48 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(480 * scale)}px), ${(20 * scale).toFixed(2)}vh)`
+              : `clamp(${Math.round(96 * scale)}px, ${(24 * scale).toFixed(2)}vw, ${Math.round(480 * scale)}px)`,
             letterSpacing: '-0.02em',
           }
           if (parts.length === 3) {
@@ -681,7 +686,7 @@ export default function TimerApp() {
           )
         })()}
 
-        <div className="flex items-center justify-center gap-8 md:gap-10">
+        <div className={`flex items-center justify-center ${isLandscape ? 'gap-5' : 'gap-8 md:gap-10'}`}>
           <button
             type="button"
             aria-label="Reset"
@@ -695,7 +700,7 @@ export default function TimerApp() {
             type="button"
             aria-label={status === 'running' ? 'Pause' : 'Start'}
             onClick={handleStartPause}
-            className="flex h-[72px] w-[72px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
+            className={`flex ${isLandscape ? 'h-12 w-12' : 'h-[72px] w-[72px]'} items-center justify-center rounded-full transition-opacity hover:opacity-80`}
             style={{ background: 'rgba(246,246,243,0.2)' }}
           >
             {status === 'running' ? <PauseIcon /> : <PlayIcon />}
@@ -715,14 +720,14 @@ export default function TimerApp() {
             timer block's height — the digits/controls stay vertically centered
             whether or not this is showing */}
         <div
-          className={`absolute left-1/2 top-full mt-6 -translate-x-1/2 md:mt-10 ${chromeClass} ${phase === 'focus' && status !== 'idle' ? '' : 'invisible'}`}
+          className={`absolute left-1/2 top-full -translate-x-1/2 ${isLandscape ? 'mt-3' : 'mt-6 md:mt-10'} ${chromeClass} ${phase === 'focus' && status !== 'idle' ? '' : 'invisible'}`}
         >
           <FocusExtendControl onExtend={handleExtendPulse} />
         </div>
       </div>
 
       {/* Scene picker — bottom center */}
-      <div className={`absolute bottom-6 ${chromeClass}`}>
+      <div className={`absolute ${isLandscape ? 'bottom-2' : 'bottom-6'} ${chromeClass}`}>
         <ScenePicker />
       </div>
 
@@ -737,7 +742,7 @@ export default function TimerApp() {
       {justCompletedFocus && (
         <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
       )}
-      {handoffOpen && <MobileHandoffSheet onClose={() => setHandoffOpen(false)} />}
+      {handoffOpen && !isLandscape && <MobileHandoffSheet onClose={() => setHandoffOpen(false)} />}
       {desktopSnackbarOpen && (
         <DesktopOnboardingSnackbar onClose={() => setDesktopSnackbarOpen(false)} />
       )}

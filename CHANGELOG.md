@@ -2,6 +2,11 @@
 
 All notable changes to DnD Timer are documented here.
 
+## [0.0.1.2] - 2026-07-22
+
+### Added
+- Mobile landscape support: rotating your phone to landscape now compresses the timer layout to fit the shorter viewport. The timer font scales down to stay within the screen height, control buttons shrink, spacing tightens, and the handoff sheet hides until you rotate back to portrait. Rotating in either direction updates the layout immediately.
+
 ## [0.0.1.1] - 2026-07-21
 
 ### Fixed
