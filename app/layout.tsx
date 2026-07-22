@@ -29,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        <meta name="theme-color" content="#000000" />
         {GA_MEASUREMENT_ID && (
           // Runs synchronously before gtag.js loads. Visiting once with ?ga_off=1
           // persists an opt-out flag (localStorage) that gtag.js checks on every

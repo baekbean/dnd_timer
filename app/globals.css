@@ -31,8 +31,12 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: #000;
+}
+
 body {
-  background-color: #F6F6F3;
+  background-color: #1c1c1c;
   color: #343434;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;

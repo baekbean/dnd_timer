@@ -7,7 +7,7 @@ import Footer from '@/components/Footer'
 
 export default function AboutPage() {
   return (
-    <main>
+    <main className="bg-[#F6F6F3]">
       <Nav />
       <Hero />
       <Section2 />
