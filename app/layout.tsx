@@ -5,10 +5,22 @@ import { GA_MEASUREMENT_ID } from '@/lib/ga'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://nooktimer.com'),
   title: 'Do Not Disturb Timer',
   description:
     'A focus timer that belongs on your desk. A focus timer designed to become part of your workspace.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
+    title: 'Do Not Disturb Timer',
+    description: 'A focus timer that belongs on your desk.',
+    url: 'https://nooktimer.com',
+    siteName: 'Nook Timer',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
     title: 'Do Not Disturb Timer',
     description: 'A focus timer that belongs on your desk.',
   },
