@@ -2,6 +2,11 @@
 
 All notable changes to DnD Timer are documented here.
 
+## [0.0.1.1] - 2026-07-21
+
+### Fixed
+- Resolved React hydration error #418 on Chrome/Android. The fullscreen support check was running inside a `useState` initializer, which produced different values on the server (no fullscreen API) versus the client (fullscreen API present), causing the rendered HTML to mismatch and React to fall back to a full client re-render. The check now runs in a `useEffect` after mount so both server and client start with the same initial state.
+
 ## [0.0.1.0] - 2026-07-20
 
 ### Changed

@@ -254,16 +254,16 @@ function useFullscreen() {
   // iPhone Safari has no Fullscreen API for non-video elements (iPadOS 16.4+
   // and other browsers do) — detect support so the button can hide itself
   // instead of sitting there doing nothing when tapped.
-  const [isSupported] = useState(
-    () => typeof document !== 'undefined' && typeof document.documentElement.requestFullscreen === 'function'
-  )
+  const [isSupported, setIsSupported] = useState(false)
 
   useEffect(() => {
-    if (!isSupported) return
+    const supported = typeof document.documentElement.requestFullscreen === 'function'
+    setIsSupported(supported)
+    if (!supported) return
     const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
     document.addEventListener('fullscreenchange', onChange)
     return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [isSupported])
+  }, [])
 
   const toggle = () => {
     try {
