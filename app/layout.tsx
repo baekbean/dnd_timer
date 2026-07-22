@@ -7,11 +7,11 @@ import './globals.css'
 export const metadata: Metadata = {
   metadataBase: new URL('https://nooktimer.com'),
   title: {
-    default: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    default: 'NookTimer – Focus Timer for Your Space',
     template: '%s | NookTimer',
   },
   description:
-    'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
+    'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
   keywords: [
     'focus timer',
     'pomodoro timer',
@@ -27,18 +27,18 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    title: 'NookTimer – Focus Timer for Your Space',
     description:
-      'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
+      'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
     url: 'https://nooktimer.com',
     siteName: 'NookTimer',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    title: 'NookTimer – Focus Timer for Your Space',
     description:
-      'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
+      'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
   },
   appleWebApp: {
     capable: true,
