@@ -6,23 +6,39 @@ import './globals.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://nooktimer.com'),
-  title: 'Do Not Disturb Timer',
+  title: {
+    default: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    template: '%s | NookTimer',
+  },
   description:
-    'A focus timer that belongs on your desk. A focus timer designed to become part of your workspace.',
+    'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
+  keywords: [
+    'focus timer',
+    'pomodoro timer',
+    'study timer',
+    'online timer',
+    'deep work',
+    'productivity timer',
+    'minimal timer',
+    'ambient timer',
+    'aesthetic timer',
+  ],
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Do Not Disturb Timer',
-    description: 'A focus timer that belongs on your desk.',
+    title: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    description:
+      'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
     url: 'https://nooktimer.com',
-    siteName: 'Nook Timer',
+    siteName: 'NookTimer',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Do Not Disturb Timer',
-    description: 'A focus timer that belongs on your desk.',
+    title: 'NookTimer – Beautiful Focus Timer for Deep Work & Studying',
+    description:
+      'A beautiful online focus timer for deep work, studying, reading, and productivity. Minimal design, ambient scenes, and distraction-free focus.',
   },
   appleWebApp: {
     capable: true,
