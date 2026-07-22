@@ -1,7 +1,7 @@
 {
-  "name": "Do Not Disturb Timer",
-  "short_name": "DnD Timer",
-  "description": "A focus timer that belongs on your desk.",
+  "name": "NookTimer",
+  "short_name": "NookTimer",
+  "description": "An online focus timer that fits naturally into your workspace.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1c1c1c",
