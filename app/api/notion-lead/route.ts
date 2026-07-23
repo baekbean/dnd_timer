@@ -19,7 +19,6 @@ type NotionLead = {
   platform: Platform
   profileUrl: string | null
   followers: number | null
-  followerTier: FollowerTier | null
   notes: string
 }
 
@@ -92,10 +91,6 @@ function parseLead(body: unknown): NotionLead | string {
         : null,
     followers:
       typeof body.followers === 'number' ? body.followers : null,
-    followerTier:
-      typeof body.followerTier === 'string'
-        ? (body.followerTier as FollowerTier)
-        : null,
     notes:
       typeof body.notes === 'string'
         ? body.notes.slice(0, MAX_NOTES_LENGTH)
@@ -202,9 +197,6 @@ export async function POST(request: Request) {
     }
     if (lead.followers !== null) {
       properties.Followers = { number: lead.followers }
-    }
-    if (lead.followerTier) {
-      properties['Follower Tier'] = { select: { name: lead.followerTier } }
     }
     if (lead.notes) {
       properties.Notes = {

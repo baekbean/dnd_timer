@@ -113,6 +113,8 @@ describe('notion lead route', () => {
     const createCall = vi.mocked(fetch).mock.calls[1]
     const createBody = JSON.parse(createCall[1]?.body as string)
     expect(createBody.properties.Status).toEqual({ select: { name: 'Lead' } })
+    expect(createBody.properties.Followers).toEqual({ number: 1200 })
+    expect(createBody.properties['Follower Tier']).toBeUndefined()
     expect(
       createBody.properties.Notes.rich_text[0].text.content,
     ).toHaveLength(2_000)
