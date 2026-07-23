@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'DND Timer',
+    title: 'NookTimer',
     statusBarStyle: 'black-translucent',
   },
   icons: {
