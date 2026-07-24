@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import Link from 'next/link'
 
 const socialLinks = [
   { label: 'TikTok', href: 'https://www.tiktok.com/@dndtimer' },
@@ -33,9 +34,9 @@ export default function Footer() {
           <p className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4]">
             © 2026 Do not Disturb Timer
             <span className="mx-2">·</span>
-            <a href="/" className="hover:underline transition-opacity hover:opacity-60">
+            <Link href="/" className="hover:underline transition-opacity hover:opacity-60">
               Try the timer (beta)
-            </a>
+            </Link>
           </p>
         </div>
 

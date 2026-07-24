@@ -2,6 +2,24 @@
 
 All notable changes to DnD Timer are documented here.
 
+## [0.0.1.3] - 2026-07-24
+
+### Added
+- Analytics now track how long each scene is on screen (`scene_exposure` event with `scene_id`, `duration_ms`, and `ended_reason`). This makes it possible to measure which scenes users actually spend time with, including the default scene — previously untrackable because it never receives a "switch to" event.
+- Timer sessions abandoned by closing or navigating away are now captured as `session_abandon` with `via: tab_closed`. Previously, sessions that ended without pressing Reset or Skip produced no exit signal in analytics.
+- Sitemap (`/sitemap.xml`) and improved `robots.txt` with sitemap reference for Google Search Console indexing.
+
+### Changed
+- Site title updated to "NookTimer – Focus Timer for Your Space" with per-page title templating (`%s | NookTimer` for inner pages).
+- Site description, Open Graph, and Twitter Card metadata updated with keyword-rich copy targeting focus timer, study timer, and ambient timer searches.
+- App icon replaced across all surfaces (favicon, Apple touch icon, PWA icons) with the new NookTimer brand mark.
+- PWA manifest updated: app name changed from "Do Not Disturb Timer" to "NookTimer".
+
+### Fixed
+- Homepage `<title>` was stuck on "Do Not Disturb Timer" because `app/page.tsx` had a stale `metadata` export overriding the layout's `title.default`. Removed to let the layout default take effect.
+- iOS landscape mode safe areas (left/right bars) now render dark instead of the previous off-white (`#F6F6F3`). The `html` and `body` backgrounds are now dark; the `/about` landing page retains its light background via an explicit class.
+- Footer "Try the timer" link replaced `<a href="/">` with Next.js `<Link>` to fix `@next/next/no-html-link-for-pages` lint error.
+
 ## [0.0.1.2] - 2026-07-22
 
 ### Added
