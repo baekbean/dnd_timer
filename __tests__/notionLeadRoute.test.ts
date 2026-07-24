@@ -36,6 +36,7 @@ describe('notion lead route', () => {
 
   it.each([
     [{ platform: 'Instagram' }, 'creator is required.'],
+    [{ creator: '@', platform: 'Instagram' }, 'creator is required.'],
     [
       { creator: '@creator', platform: 'YouTube' },
       'platform must be Instagram or TikTok.',
@@ -78,6 +79,10 @@ describe('notion lead route', () => {
             },
             {
               property: 'Creator',
+              title: { equals: 'creator' },
+            },
+            {
+              property: 'Creator',
               title: { equals: '@creator' },
             },
           ],
@@ -112,6 +117,9 @@ describe('notion lead route', () => {
 
     const createCall = vi.mocked(fetch).mock.calls[1]
     const createBody = JSON.parse(createCall[1]?.body as string)
+    expect(createBody.properties.Creator).toEqual({
+      title: [{ type: 'text', text: { content: 'creator' } }],
+    })
     expect(createBody.properties.Status).toEqual({ select: { name: 'Lead' } })
     expect(createBody.properties.Followers).toEqual({ number: 1200 })
     expect(createBody.properties['Follower Tier']).toBeUndefined()

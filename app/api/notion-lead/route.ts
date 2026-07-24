@@ -35,7 +35,10 @@ function parseLead(body: unknown): NotionLead | string {
     return 'Request body must be a JSON object.'
   }
 
-  const creator = typeof body.creator === 'string' ? body.creator.trim() : ''
+  const creator =
+    typeof body.creator === 'string'
+      ? body.creator.trim().replace(/^@+/, '').trim()
+      : ''
   if (!creator) {
     return 'creator is required.'
   }
@@ -146,6 +149,7 @@ export async function POST(request: Request) {
 
   const duplicateFilters: Record<string, unknown>[] = [
     { property: 'Creator', title: { equals: lead.creator } },
+    { property: 'Creator', title: { equals: `@${lead.creator}` } },
   ]
 
   if (lead.profileUrl) {
@@ -162,10 +166,7 @@ export async function POST(request: Request) {
         method: 'POST',
         headers: notionHeaders(token),
         body: JSON.stringify({
-          filter:
-            duplicateFilters.length === 1
-              ? duplicateFilters[0]
-              : { or: duplicateFilters },
+          filter: { or: duplicateFilters },
           page_size: 1,
         }),
       },
