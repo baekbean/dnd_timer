@@ -554,8 +554,17 @@ export default function TimerApp() {
         ended_reason: 'tab_closed',
       })
     }
+    // Reset the exposure clock when the page is restored from bfcache so
+    // duration since restoration is measured, not duration since the freeze.
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) markSceneEntered()
+    }
     window.addEventListener('pagehide', handlePageHide)
-    return () => window.removeEventListener('pagehide', handlePageHide)
+    window.addEventListener('pageshow', handlePageShow)
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('pageshow', handlePageShow)
+    }
   }, [])
 
   const handleReset = () => {

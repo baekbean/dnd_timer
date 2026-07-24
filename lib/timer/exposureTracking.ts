@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * Ephemeral (non-persisted) timestamp used only for analytics duration
  * calculations — how long the current scene has been on screen.
