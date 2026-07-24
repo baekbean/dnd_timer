@@ -10,9 +10,11 @@ import {
   trackFullscreenEnter,
   trackFocusExtend,
   trackSoundToggle,
+  trackSceneExposure,
 } from '@/lib/ga'
 import posthog from 'posthog-js'
 import { getScene } from '@/lib/timer/scenes'
+import { markSceneEntered, msSinceSceneEntered } from '@/lib/timer/exposureTracking'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
 import { useIdleHide } from '@/lib/timer/useIdleHide'
@@ -338,6 +340,9 @@ export default function TimerApp() {
     const firstVisit = !hasSavedState()
     useTimerStore.persist.rehydrate()
     useTimerStore.getState().syncAfterLoad()
+    // Start the scene-exposure clock on the scene the user actually lands on
+    // (post-rehydration), not the split-second of DEFAULT_SCENE_ID before it.
+    markSceneEntered()
     // eslint-disable-next-line react-hooks/set-state-in-effect -- First-run decision needs the persisted snapshot, only readable after mount.
     if (firstVisit && detectDeviceType() !== 'mobile') setSettingsOpen(true)
   }, [])
@@ -522,12 +527,36 @@ export default function TimerApp() {
     }
   }
 
-  const abandonIfMidFocus = (via: 'reset' | 'skip') => {
+  const abandonIfMidFocus = (via: 'reset' | 'skip' | 'tab_closed') => {
     if (phase === 'focus' && status !== 'idle') {
       trackSessionAbandon({ via, remaining_ms: remainingMs })
       posthog.capture('session_abandon', { via, remaining_ms: remainingMs })
     }
   }
+
+  // Reliable exit signal — covers the silent-tab-close case that reset/skip
+  // never see. `pagehide` fires on real navigation/close/refresh (and bfcache
+  // eviction); it does NOT fire on a plain tab-switch or app backgrounding,
+  // so a DnD/focus session left running in a background tab is never
+  // miscounted as abandoned here.
+  useEffect(() => {
+    const handlePageHide = () => {
+      const s = useTimerStore.getState()
+      if (s.phase === 'focus' && s.status !== 'idle') {
+        trackSessionAbandon({ via: 'tab_closed', remaining_ms: s.remainingMs })
+        posthog.capture('session_abandon', { via: 'tab_closed', remaining_ms: s.remainingMs })
+      }
+      const duration_ms = msSinceSceneEntered()
+      trackSceneExposure({ scene_id: s.sceneId, duration_ms, ended_reason: 'tab_closed' })
+      posthog.capture('scene_exposure', {
+        scene_id: s.sceneId,
+        duration_ms,
+        ended_reason: 'tab_closed',
+      })
+    }
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [])
 
   const handleReset = () => {
     abandonIfMidFocus('reset')

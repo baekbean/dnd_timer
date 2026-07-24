@@ -2,7 +2,8 @@
 
 import { SCENES } from '@/lib/timer/scenes'
 import { useTimerStore } from '@/lib/timer/store'
-import { trackSceneChange } from '@/lib/ga'
+import { trackSceneChange, trackSceneExposure } from '@/lib/ga'
+import { markSceneEntered, msSinceSceneEntered } from '@/lib/timer/exposureTracking'
 import posthog from 'posthog-js'
 
 export default function ScenePicker() {
@@ -22,8 +23,20 @@ export default function ScenePicker() {
             title={scene.name}
             onClick={() => {
               if (scene.id !== sceneId) {
+                // Log the OUTGOING scene's exposure before switching — this is
+                // what lets the default scene's usage be measured too, since it
+                // never gets a "switch to" event of its own.
+                const duration_ms = msSinceSceneEntered()
+                trackSceneExposure({ scene_id: sceneId, duration_ms, ended_reason: 'switched' })
+                posthog.capture('scene_exposure', {
+                  scene_id: sceneId,
+                  duration_ms,
+                  ended_reason: 'switched',
+                })
+
                 trackSceneChange({ scene_id: scene.id })
                 posthog.capture('scene_change', { scene_id: scene.id })
+                markSceneEntered()
               }
               setScene(scene.id)
             }}

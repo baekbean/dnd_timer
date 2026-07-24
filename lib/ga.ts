@@ -79,13 +79,35 @@ export function trackSessionComplete(params: { completed_phase: TimerPhase; sess
   gtagEvent(eventName, params)
 }
 
-/** A running/paused focus session was cut short by reset or skip. */
-export function trackSessionAbandon(params: { via: 'reset' | 'skip'; remaining_ms: number }) {
+/** A running/paused focus session was cut short — by reset/skip, or by the
+ * tab closing/navigating away mid-session (see the pagehide handler in
+ * components/timer/TimerApp.tsx). The 'tab_closed' case used to go completely
+ * untracked — roughly half of all timer_start sessions had no exit signal
+ * at all before this. */
+export function trackSessionAbandon(params: {
+  via: 'reset' | 'skip' | 'tab_closed'
+  remaining_ms: number
+}) {
   gtagEvent('session_abandon', params)
 }
 
 export function trackSceneChange(params: { scene_id: string }) {
   gtagEvent('scene_change', params)
+}
+
+/**
+ * How long a scene was actually on screen before it ended — by switching to
+ * another scene, or by the tab closing. This is what makes "background usage
+ * rate" measurable by total time-on-screen instead of only counting active
+ * switches, which otherwise undercounts whichever scene is DEFAULT_SCENE_ID
+ * (nobody "switches to" the default — see lib/timer/scenes.ts).
+ */
+export function trackSceneExposure(params: {
+  scene_id: string
+  duration_ms: number
+  ended_reason: 'switched' | 'tab_closed'
+}) {
+  gtagEvent('scene_exposure', params)
 }
 
 export function trackFullscreenEnter() {
