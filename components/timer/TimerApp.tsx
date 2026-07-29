@@ -30,6 +30,7 @@ import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
 import { useLandscape } from '@/lib/timer/useLandscape'
 import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
+import { SITE_NAME, SITE_TITLE } from '@/lib/seo'
 import { trackDesktopOnboardingView } from '@/lib/ga'
 
 const PHASE_LABEL: Record<Phase, string> = {
@@ -599,12 +600,12 @@ export default function TimerApp() {
   const timeText = formatTime(remainingMs)
   useEffect(() => {
     if (status === 'running' || status === 'paused') {
-      document.title = `${timeText} · ${PHASE_LABEL[phase]} — Do Not Disturb Timer`
+      document.title = `${timeText} · ${PHASE_LABEL[phase]} — ${SITE_NAME}`
     } else {
-      document.title = 'Do Not Disturb Timer'
+      document.title = SITE_TITLE
     }
     return () => {
-      document.title = 'Do Not Disturb Timer'
+      document.title = SITE_TITLE
     }
   }, [timeText, status, phase])
 
