@@ -1,9 +1,25 @@
+import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
 import Section1 from '@/components/Section1'
 import Section2 from '@/components/Section2'
 import Section3 from '@/components/Section3'
 import Footer from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'About – A Focus Timer That Belongs on Your Desk',
+  description:
+    'NookTimer is a focus timer designed to become part of your workspace — calming scenes, ambient sounds, and a desk-friendly design. Learn about the project and join the waitlist.',
+  alternates: {
+    canonical: '/about',
+  },
+  openGraph: {
+    title: 'About NookTimer – A Focus Timer That Belongs on Your Desk',
+    description:
+      'NookTimer is a focus timer designed to become part of your workspace — calming scenes, ambient sounds, and a desk-friendly design.',
+    url: 'https://nooktimer.com/about',
+  },
+}
 
 export default function AboutPage() {
   return (
