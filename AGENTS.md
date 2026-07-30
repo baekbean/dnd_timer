@@ -28,3 +28,8 @@ Key routing rules:
 - Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` before deployment.
 - See `TESTING.md` for test layers and conventions.
 - Add tests for both sides of new conditionals and for every bug regression.
+
+## Analytics
+
+- See `EVENTS.md` for the full catalog of tracked events (what fires them, params, destinations, call sites).
+- When adding, renaming, or changing the params of a tracked event, update `EVENTS.md` in the same change.
