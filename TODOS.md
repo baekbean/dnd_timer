@@ -38,4 +38,16 @@
 **Priority:** P2
 **Depends on:** Sound panel + custom YouTube scene feature deploying to production
 
+### og:image doesn't cascade to nested static routes
+
+**What:** `/about` and `/updates/*` don't inherit `app/opengraph-image.jpg` as their `og:image` the way the Next.js metadata-file docs describe for a root-level static image — only `/` gets it. Investigate whether nested static/non-dynamic routes need explicit `openGraph.images` in their own metadata, or whether the convention genuinely doesn't cascade past the segment it's colocated with.
+
+**Why:** Sharing an `/about` or `/updates/[slug]` link currently shows no preview image on social platforms — same missing-preview problem the root OG card was built to fix.
+
+**Context:** Found while verifying the new `/updates` pages (built in this session) — confirmed pre-existing on the live `/about` page too, not something the Updates feature introduced.
+
+**Effort:** S
+**Priority:** P2
+**Depends on:** None
+
 ## Completed

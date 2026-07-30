@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { track } from '@vercel/analytics'
 import { GOOGLE_FORM_BASE_URL } from '@/lib/constants'
@@ -30,18 +31,28 @@ export default function Nav() {
           priority
           style={{ filter: scrolled ? 'none' : 'brightness(0) invert(1)' }}
         />
-        <a
-          href={GOOGLE_FORM_BASE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => {
-            track('join_waitlist', { location: 'nav' })
-            trackWaitlistClick({ button_location: 'nav', button_text: 'Join waitlist' })
-          }}
-          className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[22px] py-[14px] rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
-        >
-          Join waitlist
-        </a>
+        <div className="flex items-center gap-6">
+          <Link
+            href="/updates"
+            className={`font-pretendard text-[14px] transition-colors ${
+              scrolled ? 'text-[#343434] hover:text-[#343434]/70' : 'text-[#F6F6F3] hover:text-[#F6F6F3]/70'
+            }`}
+          >
+            Updates
+          </Link>
+          <a
+            href={GOOGLE_FORM_BASE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => {
+              track('join_waitlist', { location: 'nav' })
+              trackWaitlistClick({ button_location: 'nav', button_text: 'Join waitlist' })
+            }}
+            className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[22px] py-[14px] rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
+          >
+            Join waitlist
+          </a>
+        </div>
       </div>
     </header>
   )

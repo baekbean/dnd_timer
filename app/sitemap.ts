@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/seo'
+import { sortedUpdatePosts } from '@/lib/updates'
 
 const BASE_URL = SITE_URL
 
@@ -17,5 +18,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.7,
     },
+    {
+      url: `${BASE_URL}/updates`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    ...sortedUpdatePosts().map((post) => ({
+      url: `${BASE_URL}/updates/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    })),
   ]
 }
