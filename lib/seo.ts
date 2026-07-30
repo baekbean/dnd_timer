@@ -1,3 +1,5 @@
+import type { UpdatePost } from './updates'
+
 export const SITE_URL = 'https://nooktimer.com'
 export const SITE_NAME = 'NookTimer'
 export const SITE_TITLE = 'NookTimer – Focus Timer for Your Space'
@@ -69,6 +71,18 @@ export function faqJsonLd() {
         text: item.answer,
       },
     })),
+  }
+}
+
+export function blogPostingJsonLd(post: UpdatePost) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    datePublished: post.date,
+    description: post.excerpt,
+    url: `${SITE_URL}/updates/${post.slug}`,
+    author: { '@type': 'Organization', name: SITE_NAME },
   }
 }
 
