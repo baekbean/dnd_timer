@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { SITE_URL } from '@/lib/seo'
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
 import Section1 from '@/components/Section1'
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
     title: 'About NookTimer – A Focus Timer That Belongs on Your Desk',
     description:
       'NookTimer is a focus timer designed to become part of your workspace — calming scenes, ambient sounds, and a desk-friendly design.',
-    url: 'https://nooktimer.com/about',
+    url: `${SITE_URL}/about`,
   },
 }
 

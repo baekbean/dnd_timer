@@ -4,11 +4,11 @@ import { FAQ_ITEMS } from '@/lib/seo'
 const FEATURES = [
   {
     title: 'Scenes that feel like your space',
-    body: 'Choose a calming scene — a sunlit meadow, a quiet dusk, a still night — and let the timer fade into the background of your workspace instead of shouting for attention. You can even bring your own YouTube video as a custom scene.',
+    body: 'Choose a calming scene — a sunlit meadow, a quiet dusk, a still night — and let the timer fade into the background of your workspace instead of shouting for attention.',
   },
   {
     title: 'Ambient sound that keeps you in flow',
-    body: 'Every scene comes with matching ambient audio: soft rain, birdsong, evening air. Steady background sound masks distractions and makes long focus sessions feel effortless.',
+    body: 'Flip on the ambient sound layer and let steady background noise mask distractions — it makes long focus sessions feel effortless.',
   },
   {
     title: 'Pomodoro-style sessions, your way',
@@ -30,7 +30,7 @@ export default function SeoContent() {
           <h1 className="font-aspekta text-[26px] uppercase leading-[1.3] text-[#f5f5f5] md:text-[32px]">
             A calm online focus timer for deep work and study
           </h1>
-          <p className="text-[15px] leading-[1.7]">
+          <p className="text-[16px] leading-[1.7]">
             NookTimer is a free focus timer that runs right in your browser — no
             download, no account. Instead of a bare countdown, it gives you a
             quiet corner: calming scenes, ambient sounds, and a Pomodoro-style
@@ -45,7 +45,7 @@ export default function SeoContent() {
               <h2 className="font-aspekta text-[18px] uppercase leading-[1.4] text-[#f5f5f5]">
                 {feature.title}
               </h2>
-              <p className="text-[15px] leading-[1.7]">{feature.body}</p>
+              <p className="text-[16px] leading-[1.7]">{feature.body}</p>
             </article>
           ))}
         </div>
@@ -54,7 +54,7 @@ export default function SeoContent() {
           <h2 className="font-aspekta text-[18px] uppercase leading-[1.4] text-[#f5f5f5]">
             How to use NookTimer
           </h2>
-          <ol className="flex list-decimal flex-col gap-2 pl-5 text-[15px] leading-[1.7]">
+          <ol className="flex list-decimal flex-col gap-2 pl-5 text-[16px] leading-[1.7]">
             {STEPS.map((step) => (
               <li key={step}>{step}</li>
             ))}
@@ -68,10 +68,10 @@ export default function SeoContent() {
           <div className="flex flex-col gap-6">
             {FAQ_ITEMS.map((item) => (
               <article key={item.question} className="flex flex-col gap-2">
-                <h3 className="text-[15px] font-semibold leading-[1.5] text-[#f5f5f5]">
+                <h3 className="text-[16px] font-semibold leading-[1.5] text-[#f5f5f5]">
                   {item.question}
                 </h3>
-                <p className="text-[15px] leading-[1.7]">{item.answer}</p>
+                <p className="text-[16px] leading-[1.7]">{item.answer}</p>
               </article>
             ))}
           </div>

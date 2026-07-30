@@ -25,12 +25,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'Can I use NookTimer as a study timer?',
     answer:
-      'Absolutely. Many people use NookTimer for study-with-me style sessions. Pick a calming scene, turn on ambient sound like rain or birdsong, and set a session cycle that matches your study plan.',
+      'Absolutely. Many people use NookTimer for study-with-me style sessions. Pick a calming scene, turn on the ambient sound layer, and set a session cycle that matches your study plan.',
   },
   {
     question: 'Can I change the scenes and sounds?',
     answer:
-      'Yes. NookTimer ships with a set of calming scenes — like Meadow, Dusk, and Night — each with matching ambient audio, and you can even bring your own YouTube video as a custom scene.',
+      'Yes. NookTimer ships with a set of calming scenes — like Meadow, Dusk, and Night — plus an ambient sound layer you can toggle to match the mood. More scenes and sounds are on the way.',
   },
   {
     question: 'Does the timer keep running in the background?',
