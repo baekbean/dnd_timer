@@ -1,0 +1,170 @@
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Reshaped } from 'reshaped'
+import TimerApp from '@/components/timer/TimerApp'
+import { useTimerStore } from '@/lib/timer/store'
+import { CUSTOM_SCENE_ID, DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
+import { trackCustomSceneError, trackCustomSceneUnmuteBlocked } from '@/lib/ga'
+
+vi.mock('@/lib/ga', () => ({
+  trackTimerStart: vi.fn(),
+  trackSessionComplete: vi.fn(),
+  trackSessionAbandon: vi.fn(),
+  trackFullscreenEnter: vi.fn(),
+  trackFocusExtend: vi.fn(),
+  trackSceneExposure: vi.fn(),
+  trackCustomSceneError: vi.fn(),
+  trackCustomSceneUnmuteBlocked: vi.fn(),
+  trackDesktopOnboardingView: vi.fn(),
+}))
+
+vi.mock('posthog-js', () => ({ default: { capture: vi.fn() } }))
+
+// Real SceneBackground renders <video>/YoutubeLayer, neither drivable in
+// jsdom — replace it with a stand-in that exposes the same callback/ref
+// contract via test-only buttons, so TimerApp's own handler logic (not
+// YoutubeLayer's, which has its own dedicated test file) is what's exercised.
+const mockControls = { retryUnmute: vi.fn(), duck: vi.fn() }
+vi.mock('@/components/timer/SceneBackground', () => ({
+  default: (props: {
+    onYoutubeError?: (code: number) => void
+    onYoutubeAudioBlockedChange?: (blocked: boolean) => void
+    youtubeControlsRef?: { current: unknown }
+  }) => {
+    if (props.youtubeControlsRef) props.youtubeControlsRef.current = mockControls
+    return (
+      <div>
+        <button type="button" onClick={() => props.onYoutubeError?.(101)}>
+          fire-youtube-error
+        </button>
+        <button type="button" onClick={() => props.onYoutubeAudioBlockedChange?.(true)}>
+          fire-audio-blocked
+        </button>
+        <button type="button" onClick={() => props.onYoutubeAudioBlockedChange?.(false)}>
+          fire-audio-unblocked
+        </button>
+      </div>
+    )
+  },
+}))
+
+function renderTimerApp() {
+  return render(
+    <Reshaped>
+      <TimerApp />
+    </Reshaped>
+  )
+}
+
+describe('TimerApp — Sound panel + custom-scene handlers', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockControls.retryUnmute.mockClear()
+    mockControls.duck.mockClear()
+    localStorage.clear()
+    act(() => {
+      useTimerStore.getState().reset()
+    })
+  })
+
+  it('opens the Sound panel from the pill and closes it from the panel itself', () => {
+    renderTimerApp()
+
+    const soundButton = screen.getByRole('button', { name: 'Sound settings' })
+    expect(soundButton.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(soundButton)
+    expect(soundButton.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByRole('dialog', { name: 'Sound' })).toBeTruthy()
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Close sound settings' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close sound settings' }))
+    expect(soundButton.getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByRole('dialog', { name: 'Sound' })).toBeNull()
+  })
+
+  it('falls back to the default scene and reopens the editor with an error when the embed errors', () => {
+    useTimerStore.setState({ sceneId: CUSTOM_SCENE_ID, customYoutubeId: 'abcdefghijk' })
+    renderTimerApp()
+
+    fireEvent.click(screen.getByText('fire-youtube-error'))
+
+    expect(trackCustomSceneError).toHaveBeenCalledWith({ code: 101 })
+    expect(useTimerStore.getState().sceneId).toBe(DEFAULT_SCENE_ID)
+    expect(screen.getByRole('alert').textContent).toMatch(/can't be played here/)
+  })
+
+  it('tracks the unmute-blocked event once and shows a retry button that calls back into the player', () => {
+    useTimerStore.setState({
+      sceneId: CUSTOM_SCENE_ID,
+      customYoutubeId: 'abcdefghijk',
+      customSoundSource: 'video',
+      soundOn: true,
+    })
+    renderTimerApp()
+
+    expect(screen.queryByRole('button', { name: 'Tap to enable sound' })).toBeNull()
+
+    fireEvent.click(screen.getByText('fire-audio-blocked'))
+
+    expect(trackCustomSceneUnmuteBlocked).toHaveBeenCalledOnce()
+    const retryButton = screen.getByRole('button', { name: 'Tap to enable sound' })
+
+    fireEvent.click(retryButton)
+    expect(mockControls.retryUnmute).toHaveBeenCalledOnce()
+  })
+
+  it('does not re-track unmute-blocked on a later block after an intervening unblock', () => {
+    useTimerStore.setState({
+      sceneId: CUSTOM_SCENE_ID,
+      customYoutubeId: 'abcdefghijk',
+      customSoundSource: 'video',
+      soundOn: true,
+    })
+    renderTimerApp()
+
+    fireEvent.click(screen.getByText('fire-audio-blocked'))
+    expect(trackCustomSceneUnmuteBlocked).toHaveBeenCalledOnce()
+    expect(screen.getByRole('button', { name: 'Tap to enable sound' })).toBeTruthy()
+
+    fireEvent.click(screen.getByText('fire-audio-unblocked'))
+    expect(screen.queryByRole('button', { name: 'Tap to enable sound' })).toBeNull()
+
+    fireEvent.click(screen.getByText('fire-audio-blocked'))
+    // The tracking ref is set for the component's lifetime — a later block
+    // doesn't fire the "funnel" event a second time.
+    expect(trackCustomSceneUnmuteBlocked).toHaveBeenCalledOnce()
+  })
+
+  it('ducks the video under the chime on a natural completion for the custom video scene', () => {
+    useTimerStore.setState({
+      sceneId: CUSTOM_SCENE_ID,
+      customYoutubeId: 'abcdefghijk',
+      customSoundSource: 'video',
+      soundOn: true,
+    })
+    renderTimerApp()
+
+    act(() => {
+      useTimerStore.setState({ completions: 1, lastCompletedPhase: 'focus' })
+    })
+
+    expect(mockControls.duck).toHaveBeenCalledWith(2000)
+  })
+
+  it('does not duck the video when the ambient (not video) source is active', () => {
+    useTimerStore.setState({
+      sceneId: CUSTOM_SCENE_ID,
+      customYoutubeId: 'abcdefghijk',
+      customSoundSource: 'app',
+      soundOn: true,
+    })
+    renderTimerApp()
+
+    act(() => {
+      useTimerStore.setState({ completions: 1, lastCompletedPhase: 'focus' })
+    })
+
+    expect(mockControls.duck).not.toHaveBeenCalled()
+  })
+})

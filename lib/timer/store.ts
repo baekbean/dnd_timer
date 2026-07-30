@@ -1,9 +1,13 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import { DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
+import { DEFAULT_CUSTOM_YOUTUBE_ID, DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
+import { YOUTUBE_ID_RE } from '@/lib/timer/youtube'
+import { AMBIENT_PRESET_IDS, type AmbientPresetId } from '@/lib/timer/sound'
 
 export type Phase = 'focus' | 'shortBreak'
 export type TimerStatus = 'idle' | 'running' | 'paused'
+/** Which audio plays for the custom YouTube scene — meaningless for the 4 built-in scenes. */
+export type SoundSource = 'app' | 'video'
 
 export interface TimerSettings {
   focusMin: number
@@ -44,9 +48,18 @@ interface TimerState {
   cyclePos: number
   daily: DailyLog
   sceneId: string
+  /** Video backing the custom scene slot. Always a valid 11-char id. */
+  customYoutubeId: string
+  /** For the custom YouTube scene only: which audio actually plays. */
+  customSoundSource: SoundSource
+  /** Which synthesized noise plays for the ambient source — a global
+   * preference, not tied to any one scene. */
+  ambientPresetId: AmbientPresetId
   soundOn: boolean
-  /** 0–1 */
+  /** 0–1, ambient's own volume. */
   volume: number
+  /** 0–1, independent of `volume` — the custom scene's video audio. */
+  videoVolume: number
   /** Bumped on every natural phase completion — UI watches this for chime/notification. */
   completions: number
   /** Phase that finished at the last natural completion. */
@@ -66,8 +79,13 @@ interface TimerState {
   /** Adds `minutes` to the current focus session's remaining time. No-op outside focus. */
   extendFocus: (minutes: number) => void
   setScene: (sceneId: string) => void
+  /** Replaces the video in the custom slot. Expects an already-parsed video id. */
+  setCustomYoutubeId: (videoId: string) => void
+  setCustomSoundSource: (source: SoundSource) => void
+  setAmbientPresetId: (id: AmbientPresetId) => void
   setSoundOn: (on: boolean) => void
   setVolume: (volume: number) => void
+  setVideoVolume: (volume: number) => void
   dismissComplete: () => void
   /** Reconcile persisted state with the wall clock after rehydration. */
   syncAfterLoad: () => void
@@ -178,8 +196,15 @@ export const useTimerStore = create<TimerState>()(
       cyclePos: 0,
       daily: { date: todayKey(), completedSessions: 0 },
       sceneId: DEFAULT_SCENE_ID,
+      customYoutubeId: DEFAULT_CUSTOM_YOUTUBE_ID,
+      // Matches the behavior that shipped before this field existed — the
+      // video's own audio was the only option.
+      customSoundSource: 'video',
+      // Matches the original single-noise placeholder byte-for-byte.
+      ambientPresetId: 'brown',
       soundOn: true,
       volume: 0.6,
+      videoVolume: 0.6,
       completions: 0,
       lastCompletedPhase: null,
       justCompletedFocus: false,
@@ -306,6 +331,19 @@ export const useTimerStore = create<TimerState>()(
         armPersist()
         set({ sceneId })
       },
+      setCustomYoutubeId: (videoId) => {
+        if (!YOUTUBE_ID_RE.test(videoId)) return
+        armPersist()
+        set({ customYoutubeId: videoId })
+      },
+      setCustomSoundSource: (source) => {
+        armPersist()
+        set({ customSoundSource: source })
+      },
+      setAmbientPresetId: (id) => {
+        armPersist()
+        set({ ambientPresetId: id })
+      },
       setSoundOn: (soundOn) => {
         armPersist()
         set({ soundOn })
@@ -313,6 +351,10 @@ export const useTimerStore = create<TimerState>()(
       setVolume: (volume) => {
         armPersist()
         set({ volume: Math.min(1, Math.max(0, volume)) })
+      },
+      setVideoVolume: (volume) => {
+        armPersist()
+        set({ videoVolume: Math.min(1, Math.max(0, volume)) })
       },
       dismissComplete: () => {
         armPersist()
@@ -358,6 +400,16 @@ export const useTimerStore = create<TimerState>()(
           daily: { ...daily, completedSessions: completed },
           // New settings keys get defaults when rehydrating an older persisted shape
           settings: { ...DEFAULT_SETTINGS, ...s.settings },
+          // A hand-edited or half-written storage entry would otherwise embed a
+          // garbage video id and leave the custom scene stuck on a dead player
+          customYoutubeId: YOUTUBE_ID_RE.test(s.customYoutubeId ?? '')
+            ? s.customYoutubeId
+            : DEFAULT_CUSTOM_YOUTUBE_ID,
+          // Absent (pre-feature storage) or corrupted values both fall back
+          // to 'video' — the behavior that shipped before this field existed.
+          customSoundSource: s.customSoundSource === 'app' ? 'app' : 'video',
+          ambientPresetId: AMBIENT_PRESET_IDS.includes(s.ambientPresetId) ? s.ambientPresetId : 'brown',
+          videoVolume: Number.isFinite(s.videoVolume) ? Math.min(1, Math.max(0, s.videoVolume)) : 0.6,
           // Never resurface a stale Complete screen after a reload
           justCompletedFocus: false,
         })

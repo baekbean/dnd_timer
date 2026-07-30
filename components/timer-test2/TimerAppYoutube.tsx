@@ -343,10 +343,9 @@ export default function TimerAppYoutube() {
   const ambientKey = ambient.kind === 'file' ? `file:${ambient.src}` : 'noise'
   useEffect(() => {
     if (status === 'running' && soundOn) {
-      soundEngine.startAmbient(getScene(sceneId))
+      soundEngine.startAmbient('brown')
       return () => soundEngine.stopAmbient()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, soundOn, ambientKey])
 
   useEffect(() => {

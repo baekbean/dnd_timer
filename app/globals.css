@@ -33,6 +33,12 @@
 
 html {
   background-color: #000;
+  /* Reshaped locks scroll (overflow: hidden) on <html> while a Modal/Popover
+     is open, then removes that lock when it closes. Chrome's scroll-anchoring
+     can misattribute the anchor while a large portaled subtree (the popover
+     content, appended at the end of <body>) mounts/unmounts during that
+     window, snapping the page to an unrelated scroll position on close. */
+  overflow-anchor: none;
 }
 
 body {

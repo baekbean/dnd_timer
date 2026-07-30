@@ -6,6 +6,7 @@ import { track } from '@vercel/analytics'
 import { buildFormUrl, submitEmailSilently } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
 import SectionTracker from '@/components/SectionTracker'
+import posthog from 'posthog-js'
 
 export default function Section3() {
   const [email, setEmail] = useState('')
@@ -14,6 +15,7 @@ export default function Section3() {
     e.preventDefault()
     track('join_waitlist', { location: 'cta', email })
     trackWaitlistClick({ button_location: 'cta', button_text: 'Join Waitlist' })
+    posthog.capture('waitlist_click', { button_location: 'cta', button_text: 'Join Waitlist' })
     submitEmailSilently(email)
     const url = buildFormUrl(email)
     if (url !== '#') {

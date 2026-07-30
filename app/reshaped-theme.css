@@ -1,0 +1,77 @@
+/**
+ * Custom Reshaped theme encoding the app's existing brand tokens, so
+ * migrated components render with the current look instead of Reshaped's
+ * default "slate" theme. Hand-written (not generated via the Reshaped CLI/
+ * Figma sync) — these are plain CSS custom properties following the same
+ * `--rs-*` names Reshaped's own themes use (see node_modules/reshaped/dist/
+ * themes/slate/theme.css for the full token reference).
+ *
+ * Only light mode is defined — the app has one fixed light-chrome-on-video
+ * aesthetic, not a switchable light/dark mode (`<Reshaped defaultColorMode
+ * ="light">` in app/layout.tsx never switches to dark).
+ */
+
+[data-rs-theme~='nooktimer'] {
+  /* Fonts — same string as --font-pretendard in globals.css */
+  --rs-font-family-headline: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --rs-font-family-title: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  --rs-font-family-body: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Radius — mapped to the app's 3 recurring corner values (8/12/16px) */
+  --rs-radius-small: 8px;
+  --rs-radius-medium: 12px;
+  --rs-radius-large: 16px;
+
+  /* Shadow — the one panel shadow reused across every modal/popover card
+   * today (`0px 4px 24px rgba(0,0,0,0.15/0.18)`), scaled down for smaller
+   * elevations. */
+  --rs-shadow-outline: 0px 1px 4px rgba(0, 0, 0, 0.12);
+  --rs-shadow-outline-intense: 0px 1px 4px rgba(0, 0, 0, 0.18);
+  --rs-shadow-raised: 0px 2px 8px rgba(0, 0, 0, 0.15);
+  --rs-shadow-raised-intense: 0px 2px 8px rgba(0, 0, 0, 0.22);
+  --rs-shadow-overlay: 0px 4px 24px rgba(0, 0, 0, 0.15);
+  --rs-shadow-overlay-intense: 0px 4px 24px rgba(0, 0, 0, 0.22);
+}
+
+[data-rs-theme~='nooktimer'][data-rs-color-mode='light'] {
+  /* Primary — the sage green accent (#74856E). Highlighted/lighter shades
+   * reuse the exact stops from the signature scene's gradient
+   * (lib/timer/scenes.ts) rather than an arbitrary computed tint. */
+  --rs-color-background-primary: #74856e;
+  --rs-color-background-primary-faded: #eef1ed;
+  --rs-color-background-primary-highlighted: #5c6b57;
+  --rs-color-background-primary-highlighted-faded: rgba(116, 133, 110, 0.08);
+  --rs-color-border-primary: #74856e;
+  --rs-color-border-primary-faded: #d8ddd5;
+  --rs-color-foreground-primary: #5c6b57;
+  --rs-color-on-brand: #f6f6f3;
+
+  /* Neutral — the app's body text/panel-chrome greys */
+  --rs-color-background-neutral: rgba(52, 52, 52, 0.06);
+  --rs-color-background-neutral-faded: rgba(52, 52, 52, 0.03);
+  --rs-color-background-neutral-highlighted: rgba(52, 52, 52, 0.12);
+  --rs-color-background-neutral-highlighted-faded: rgba(52, 52, 52, 0.08);
+  --rs-color-border-neutral: rgba(52, 52, 52, 0.15);
+  --rs-color-border-neutral-faded: rgba(52, 52, 52, 0.08);
+  --rs-color-foreground-neutral: #343434;
+  --rs-color-foreground-neutral-faded: rgba(52, 52, 52, 0.55);
+  /* Text/icon color for a solid element ON TOP of the (light) neutral
+   * background above — dark, not the light-on-brand color. Nothing
+   * consumed this until the Phase 4 ToggleButton/Button migration. */
+  --rs-color-on-background-neutral: #343434;
+
+  /* Elevation — modal/popover card surfaces are plain white today */
+  --rs-color-background-elevation-base: #ffffff;
+  --rs-color-background-elevation-raised: #ffffff;
+  --rs-color-background-elevation-overlay: #ffffff;
+  --rs-color-background-page: #f6f6f3;
+  --rs-color-background-page-faded: #ffffff;
+
+  /* Critical — consolidates the two inconsistent error reds found in the
+   * current codebase (#b4483c in CustomScenePopover, #b3564a in
+   * MobileHandoffSheet) into one canonical value. */
+  --rs-color-background-critical: #b4483c;
+  --rs-color-background-critical-faded: #fbeeec;
+  --rs-color-foreground-critical: #b4483c;
+  --rs-color-on-background-critical: #f6f6f3;
+}
