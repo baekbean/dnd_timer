@@ -2,7 +2,7 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
-## [0.0.1.5] - 2026-07-30
+## [0.0.1.6] - 2026-07-30
 
 ### Added
 - Set your own background video: paste a YouTube link and it plays behind the timer, with its own volume control right alongside the ambient sounds.
@@ -21,6 +21,11 @@ All notable changes to NookTimer (formerly DnD Timer) are documented here.
 ### For contributors
 - Added `EVENTS.md`, a catalog of every analytics event this app fires — what triggers it, its parameters, and where it's called from.
 - Closed a few pre-existing analytics gaps: duration-preset clicks and settings-toggle changes are now tracked, and a custom-background reset is now distinguishable from a genuinely custom URL.
+
+## [0.0.1.5] - 2026-07-30
+
+### Added
+- You can now keep your own visits out of analytics: open any page with `?internal=1` (and `?internal=0` to undo). The choice is remembered per browser, so it keeps excluding you even after your home IP changes — the usual reason IP-based internal-traffic filters quietly stop working. It opts that browser out of PostHog entirely and tags every Google Analytics hit as internal traffic (`traffic_type=internal`) so the GA4 internal-traffic filter drops it, independent of IP.
 
 ## [0.0.1.4] - 2026-07-30
 

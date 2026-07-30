@@ -125,6 +125,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
                 gtag('js', new Date());
+                // Internal-traffic opt-out: same ?internal=1 flag as PostHog
+                // (instrumentation-client.ts). Tags every GA hit — including the
+                // initial page_view and all later events — with
+                // traffic_type=internal via gtag('set'), so the GA4
+                // internal-traffic data filter excludes this browser regardless
+                // of its (dynamic / IPv6) IP. ?internal=0 clears it.
+                try {
+                  var __p = new URLSearchParams(location.search).get('internal');
+                  if (__p === '1') localStorage.setItem('dnd_internal', '1');
+                  else if (__p === '0') localStorage.removeItem('dnd_internal');
+                  if (localStorage.getItem('dnd_internal') === '1') {
+                    gtag('set', { traffic_type: 'internal' });
+                  }
+                } catch (e) {}
                 gtag('config', '${GA_MEASUREMENT_ID}', ${
                   isDev
                     ? JSON.stringify({ debug_mode: true })
