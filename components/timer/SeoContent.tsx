@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import SeoFeedbackLink from '@/components/timer/SeoFeedbackLink'
 import { FAQ_ITEMS } from '@/lib/seo'
 
 const FEATURES = [
@@ -79,11 +79,7 @@ export default function SeoContent() {
 
         <footer className="border-t border-[#2c2c2c] pt-8 text-[13px] leading-[1.6] text-[#8a8a85]">
           <p>
-            Curious where NookTimer is headed?{' '}
-            <Link href="/about" className="underline hover:text-[#d9d9d4]">
-              Learn more about the project
-            </Link>
-            .
+            Got thoughts on NookTimer? <SeoFeedbackLink />.
           </p>
         </footer>
       </div>

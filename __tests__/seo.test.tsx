@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import SeoContent from '@/components/timer/SeoContent'
+import { FEEDBACK_FORM_URL } from '@/lib/constants'
 import {
   FAQ_ITEMS,
   faqJsonLd,
@@ -60,9 +61,11 @@ describe('SeoContent', () => {
     }
   })
 
-  it('links to the about page', () => {
+  it('links to the feedback form', () => {
     render(<SeoContent />)
-    const link = screen.getByRole('link', { name: /learn more about the project/i })
-    expect(link.getAttribute('href')).toBe('/about')
+    const link = screen.getByRole('link', { name: /send feedback/i })
+    expect(link.getAttribute('href')).toBe(FEEDBACK_FORM_URL)
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer')
   })
 })
