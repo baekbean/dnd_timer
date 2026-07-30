@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to DnD Timer are documented here.
+All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
 ## [0.0.1.4] - 2026-07-30
 
@@ -18,6 +18,8 @@ All notable changes to DnD Timer are documented here.
 
 ### Fixed
 - About page social shares were missing the site name and type (page metadata was silently replacing the layout's), and sitemap dates now reflect when the pages actually changed.
+
+### For contributors
 - Test suite now covers the new SEO surfaces: tab-title branding, page composition (one h1, two JSON-LD scripts), FAQ/markup parity, and the share-card size budget.
 
 ## [0.0.1.3] - 2026-07-24
