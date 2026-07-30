@@ -15,9 +15,25 @@ function createStorage(): Storage {
   }
 }
 
+/** jsdom has no matchMedia, and hooks like useLandscape call it on mount. */
+function createMatchMedia() {
+  return (query: string): MediaQueryList =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }) as unknown as MediaQueryList
+}
+
 beforeEach(() => {
   Object.defineProperty(window, 'localStorage', { configurable: true, value: createStorage() })
   Object.defineProperty(window, 'sessionStorage', { configurable: true, value: createStorage() })
+  Object.defineProperty(window, 'matchMedia', { configurable: true, value: createMatchMedia() })
 })
 
 afterEach(() => {

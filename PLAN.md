@@ -1,7 +1,7 @@
 # Desirable Focus Timer — Product Plan
 
 > Source of truth for product direction: [One-pager (Notion)](https://app.notion.com/p/One-pager-Desirable-Focus-Timer-38872054c899803196b7f0b3c8e25a50)
-> Landing page (`/`) stays as-is; the product lives at `/timer` until stable, then swaps to `/`.
+> The timer now lives at `/` (with server-rendered SEO content below it); the marketing landing page moved to `/about`.
 
 ## Product definition
 

@@ -1,6 +1,27 @@
 # Changelog
 
-All notable changes to DnD Timer are documented here.
+All notable changes to NookTimer (formerly DnD Timer) are documented here.
+
+## [0.0.1.4] - 2026-07-30
+
+### Added
+- The home page now tells search engines (and anyone who scrolls past the timer) what NookTimer is: a server-rendered section with the product story, how-to steps, and an FAQ. Previously crawlers saw an almost empty page.
+- Structured data (WebApplication + FAQPage JSON-LD) so Google can show rich results, generated from the same FAQ text visitors see.
+- Sharing nooktimer.com now shows a proper preview card: a 1200×630 image of the timer digits over the Dusk scene's gradient (optimized to 106KB so every platform renders it).
+- The About page has its own title, description, and complete social metadata (including site name and type) instead of inheriting the home page's.
+
+### Changed
+- The browser tab now says "NookTimer – Focus Timer for Your Space" — the old "Do Not Disturb Timer" branding is gone from the idle and running tab titles.
+- SEO copy describes only what's live today (the ambient sound layer), not upcoming features, so search visitors find exactly what the page promises.
+- The tab title, sitemap, robots, manifest, and About page URLs now come from one shared module (`lib/seo`), ending the drift that left the old brand name in the tab title (the root layout's copies are consolidated in a follow-up).
+- SEO section body text bumped to 16px for readability.
+
+### Fixed
+- The installable app (PWA) manifest served at `/manifest.webmanifest` still carried the old "Do Not Disturb Timer" name and green theme color — now NookTimer with the dark theme, matching the rest of the brand.
+- Sitemap dates now reflect when the pages actually changed.
+
+### For contributors
+- Test suite now covers the new SEO surfaces: tab-title branding, page composition (one h1, two JSON-LD scripts), FAQ/markup parity, and the share-card size budget.
 
 ## [0.0.1.3] - 2026-07-24
 
