@@ -2,6 +2,26 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.5] - 2026-07-30
+
+### Added
+- Set your own background video: paste a YouTube link and it plays behind the timer, with its own volume control right alongside the ambient sounds.
+- Ambient sound presets (Rain, Birds, Garden crickets, Night bugs) now play real recordings instead of a synthesized placeholder — White and Brown noise stay synthesized.
+- The Sound panel has a video-player-style volume control: click the speaker to mute, drag the slider to adjust — no separate on/off switch needed.
+
+### Changed
+- The whole app's look moved onto the Reshaped design system — switches, sliders, modals, popovers, and buttons now use Reshaped's own components instead of hand-rolled equivalents, with NookTimer's brand colors layered on top.
+- The Settings and Sound panels now have matching section subtitles ("Volume", "Sound type", etc.) so it's clear what each control group does.
+
+### Fixed
+- Opening the background-video editor no longer jumps the whole page to the bottom — the link input used to auto-focus in a way that triggered an unrelated browser scroll.
+- A mid-duck volume change (adjusting the slider right as a session-end chime plays) no longer gets silently overwritten a couple seconds later.
+- Switching ambient presets no longer leaves disconnected audio nodes behind; a stalled ambient-sound download now falls back to a synthesized bed instead of playing nothing.
+
+### For contributors
+- Added `EVENTS.md`, a catalog of every analytics event this app fires — what triggers it, its parameters, and where it's called from.
+- Closed a few pre-existing analytics gaps: duration-preset clicks and settings-toggle changes are now tracked, and a custom-background reset is now distinguishable from a genuinely custom URL.
+
 ## [0.0.1.4] - 2026-07-30
 
 ### Added
