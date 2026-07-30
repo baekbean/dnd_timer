@@ -1,5 +1,5 @@
 import { act, render } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import TimerApp from '@/components/timer/TimerApp'
 import { useTimerStore } from '@/lib/timer/store'
 import { SITE_NAME, SITE_TITLE } from '@/lib/seo'
@@ -9,6 +9,14 @@ vi.mock('posthog-js', () => ({ default: { capture: vi.fn() } }))
 vi.mock('@/components/timer/SceneBackground', () => ({ default: () => null }))
 
 describe('TimerApp document.title branding', () => {
+  // The zustand store is a module-level singleton — reset it so the tests
+  // don't depend on execution order.
+  beforeEach(() => {
+    act(() => {
+      useTimerStore.getState().reset()
+    })
+  })
+
   it('uses the NookTimer site title while idle (regression: old "Do Not Disturb Timer" branding)', () => {
     render(<TimerApp />)
     expect(document.title).toBe(SITE_TITLE)
