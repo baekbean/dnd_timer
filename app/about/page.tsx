@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     description:
       'NookTimer is a focus timer designed to become part of your workspace — calming scenes, ambient sounds, and a desk-friendly design.',
     url: `${SITE_URL}/about`,
+    // Metadata merging is shallow — a page-level openGraph replaces the
+    // layout's object entirely, so siteName/type must be repeated here.
+    siteName: 'NookTimer',
+    type: 'website',
   },
 }
 

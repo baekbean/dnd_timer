@@ -73,7 +73,9 @@ export function faqJsonLd() {
 }
 
 // Escapes `<` so the payload cannot close the script tag (XSS hardening
-// recommended by the Next.js JSON-LD guide).
+// recommended by the Next.js JSON-LD guide). Contract: pass build-time
+// constants only — this escape is NOT sufficient for user- or CMS-derived
+// content, and JSON.stringify throws on circular input.
 export function serializeJsonLd(data: object): string {
   return JSON.stringify(data).replace(/</g, '\\u003c')
 }
