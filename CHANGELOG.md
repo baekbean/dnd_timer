@@ -2,6 +2,11 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.5] - 2026-07-30
+
+### Added
+- You can now keep your own visits out of analytics: open any page with `?internal=1` (and `?internal=0` to undo). The choice is remembered per browser, so it keeps excluding you even after your home IP changes — the usual reason IP-based internal-traffic filters quietly stop working. It opts that browser out of PostHog entirely and tags every Google Analytics hit as internal traffic (`traffic_type=internal`) so the GA4 internal-traffic filter drops it, independent of IP.
+
 ## [0.0.1.4] - 2026-07-30
 
 ### Added
