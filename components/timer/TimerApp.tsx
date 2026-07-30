@@ -9,17 +9,20 @@ import {
   trackSessionAbandon,
   trackFullscreenEnter,
   trackFocusExtend,
-  trackSoundToggle,
   trackSceneExposure,
+  trackCustomSceneError,
+  trackCustomSceneUnmuteBlocked,
 } from '@/lib/ga'
 import posthog from 'posthog-js'
-import { getScene } from '@/lib/timer/scenes'
+import { CUSTOM_SCENE_ID, DEFAULT_SCENE_ID, resolveScene } from '@/lib/timer/scenes'
 import { markSceneEntered, msSinceSceneEntered } from '@/lib/timer/exposureTracking'
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
 import { useIdleHide } from '@/lib/timer/useIdleHide'
 import { formatTime, getDigitScale } from '@/lib/timer/formatTime'
 import SceneBackground from '@/components/timer/SceneBackground'
+import type { YoutubeControls } from '@/components/timer/YoutubeLayer'
+import SoundPanel from '@/components/timer/SoundPanel'
 import SettingsPanel from '@/components/timer/SettingsPanel'
 import ScenePicker from '@/components/timer/ScenePicker'
 import CompleteOverlay from '@/components/timer/CompleteOverlay'
@@ -30,8 +33,8 @@ import { detectDeviceType } from '@/lib/deviceType'
 import { useDeviceType } from '@/lib/timer/useDeviceType'
 import { useLandscape } from '@/lib/timer/useLandscape'
 import { HANDOFF_HIDE_DATE_KEY, isHandoffHiddenToday } from '@/lib/timer/handoffSession'
-import { SITE_NAME, SITE_TITLE } from '@/lib/seo'
 import { trackDesktopOnboardingView } from '@/lib/ga'
+import { SITE_NAME, SITE_TITLE } from '@/lib/seo'
 
 const PHASE_LABEL: Record<Phase, string> = {
   focus: 'Focus',
@@ -290,15 +293,19 @@ export default function TimerApp() {
   const remainingMs = useTimerStore((s) => s.remainingMs)
   const cyclePos = useTimerStore((s) => s.cyclePos)
   const sceneId = useTimerStore((s) => s.sceneId)
+  const customYoutubeId = useTimerStore((s) => s.customYoutubeId)
+  const customSoundSource = useTimerStore((s) => s.customSoundSource)
+  const ambientPresetId = useTimerStore((s) => s.ambientPresetId)
   const soundOn = useTimerStore((s) => s.soundOn)
   const volume = useTimerStore((s) => s.volume)
+  const videoVolume = useTimerStore((s) => s.videoVolume)
   const start = useTimerStore((s) => s.start)
   const pause = useTimerStore((s) => s.pause)
   const reset = useTimerStore((s) => s.reset)
   const resetSession = useTimerStore((s) => s.resetSession)
   const skip = useTimerStore((s) => s.skip)
   const tick = useTimerStore((s) => s.tick)
-  const setSoundOn = useTimerStore((s) => s.setSoundOn)
+  const setScene = useTimerStore((s) => s.setScene)
   const settings = useTimerStore((s) => s.settings)
   const completions = useTimerStore((s) => s.completions)
   const lastCompletedPhase = useTimerStore((s) => s.lastCompletedPhase)
@@ -307,13 +314,22 @@ export default function TimerApp() {
   const sessionsToday = useTimerStore((s) => s.daily.completedSessions)
 
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [soundPanelOpen, setSoundPanelOpen] = useState(false)
+  const [sceneEditorOpen, setSceneEditorOpen] = useState(false)
+  const [sceneEditorError, setSceneEditorError] = useState<string | null>(null)
+  const [youtubeAudioBlocked, setYoutubeAudioBlocked] = useState(false)
+  const youtubeControlsRef = useRef<YoutubeControls | null>(null)
   const [showResetToast, setShowResetToast] = useState(false)
+  const soundButtonRef = useRef<HTMLButtonElement>(null)
   const [handoffOpen, setHandoffOpen] = useState(false)
   const [desktopSnackbarOpen, setDesktopSnackbarOpen] = useState(false)
   const deviceType = useDeviceType()
   const isLandscape = useLandscape()
   const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
-  const scene = getScene(sceneId)
+  const scene = resolveScene(sceneId, customYoutubeId)
+  // Whether the video's own audio should actually be audible — the source
+  // toggle can mute it even while the master Sound pill is on.
+  const youtubeSoundOn = soundOn && customSoundSource === 'video'
 
   // Brief scale pulse on the digits whenever the user extends the focus session
   const digitsRef = useRef<HTMLSpanElement>(null)
@@ -327,7 +343,13 @@ export default function TimerApp() {
   }
 
   // Chrome fades away while a session runs untouched — camera-ready screen
-  const chromeHidden = useIdleHide(status === 'running' && !settingsOpen && !justCompletedFocus)
+  const chromeHidden = useIdleHide(
+    status === 'running' &&
+      !settingsOpen &&
+      !soundPanelOpen &&
+      !sceneEditorOpen &&
+      !justCompletedFocus
+  )
   const chromeClass = `transition-opacity duration-700 ${
     chromeHidden ? 'pointer-events-none opacity-0' : 'opacity-100'
   }`
@@ -466,18 +488,19 @@ export default function TimerApp() {
   // Keep the screen awake while a session is running
   useWakeLock(status === 'running')
 
-  // Ambient sound follows the running state. Keyed on the ambient's own identity
-  // (not sceneId) so switching between scenes that share the same ambient track
-  // doesn't restart playback.
-  const ambient = scene.ambient
-  const ambientKey = ambient.kind === 'file' ? `file:${ambient.src}` : 'noise'
+  // Ambient sound is audible as soon as you land on the page, independent of
+  // whether a session is running — it's atmosphere, not a session reward.
+  // Keyed on the chosen preset, a global preference, not tied to any one
+  // scene (see lib/timer/sound.ts). A YouTube scene brings its own audio by
+  // default, so the synthesized ambient stays off then — unless the person
+  // picked 'app' as the sound source.
+  const playAppAmbient = scene.youtube ? customSoundSource === 'app' : true
   useEffect(() => {
-    if (status === 'running' && soundOn) {
-      soundEngine.startAmbient(getScene(sceneId))
+    if (soundOn && playAppAmbient) {
+      soundEngine.startAmbient(ambientPresetId)
       return () => soundEngine.stopAmbient()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, soundOn, ambientKey])
+  }, [soundOn, playAppAmbient, ambientPresetId])
 
   useEffect(() => {
     soundEngine.setVolume(volume)
@@ -500,7 +523,15 @@ export default function TimerApp() {
     const phaseEvent = completedPhase === 'focus' ? 'focus_complete' : 'break_complete'
     posthog.capture(phaseEvent, { completed_phase: completedPhase, sessions_today: sessionsCompleted })
 
-    if (soundOn) soundEngine.playChime()
+    if (soundOn) {
+      // Drop the music under the chime — the end-of-session signal is useless
+      // if a track playing at full volume swallows it. Skip when the video
+      // isn't the audio source: it's already muted, so ducking it is a no-op.
+      if (sceneId === CUSTOM_SCENE_ID && customSoundSource === 'video') {
+        youtubeControlsRef.current?.duck(2000)
+      }
+      soundEngine.playChime()
+    }
 
     if (
       settings.notifyOnComplete &&
@@ -516,7 +547,7 @@ export default function TimerApp() {
         new Notification('Do Not Disturb Timer', { body })
       } catch {}
     }
-  }, [completions, lastCompletedPhase, soundOn, settings.notifyOnComplete, phase])
+  }, [completions, lastCompletedPhase, soundOn, settings.notifyOnComplete, phase, sceneId, customSoundSource])
 
   const handleStartPause = () => {
     if (status === 'running') {
@@ -585,6 +616,33 @@ export default function TimerApp() {
     skip()
   }
 
+  // The embed refused to play (owner disabled embedding, video removed, …).
+  // Fall back to a scene that definitely works and reopen the editor carrying
+  // the reason, rather than leaving a silent black rectangle.
+  const handleYoutubeError = (code: number) => {
+    trackCustomSceneError({ code })
+    posthog.capture('custom_scene_error', { code })
+    // Close out the custom scene's exposure, but no scene_change — this is a
+    // forced fallback, not something the person chose.
+    const duration_ms = msSinceSceneEntered()
+    trackSceneExposure({ scene_id: sceneId, duration_ms, ended_reason: 'switched' })
+    posthog.capture('scene_exposure', { scene_id: sceneId, duration_ms, ended_reason: 'switched' })
+    setScene(DEFAULT_SCENE_ID)
+    markSceneEntered()
+    setSceneEditorError("This video can't be played here. Try another link.")
+    setSceneEditorOpen(true)
+  }
+
+  const audioBlockedTrackedRef = useRef(false)
+  const handleYoutubeAudioBlocked = (blocked: boolean) => {
+    setYoutubeAudioBlocked(blocked)
+    if (blocked && !audioBlockedTrackedRef.current) {
+      audioBlockedTrackedRef.current = true
+      trackCustomSceneUnmuteBlocked()
+      posthog.capture('custom_scene_unmute_blocked', {})
+    }
+  }
+
   const handleFullscreen = () => {
     if (!isFullscreen) {
       trackFullscreenEnter()
@@ -614,19 +672,24 @@ export default function TimerApp() {
       className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden"
       style={{ cursor: chromeHidden ? 'none' : 'auto' }}
     >
-      <SceneBackground scene={scene} />
+      <SceneBackground
+        scene={scene}
+        soundOn={youtubeSoundOn}
+        volume={videoVolume}
+        onYoutubeError={handleYoutubeError}
+        onYoutubeAudioBlockedChange={handleYoutubeAudioBlocked}
+        youtubeControlsRef={youtubeControlsRef}
+      />
 
       {/* Sound — top left, hero-mockup pill */}
       <div className={`absolute left-6 ${isLandscape ? 'top-3' : 'top-6'} ${chromeClass}`}>
         <button
+          ref={soundButtonRef}
           type="button"
-          aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
-          aria-pressed={soundOn}
-          onClick={() => {
-            trackSoundToggle({ sound_on: !soundOn })
-            posthog.capture('sound_change', { sound_on: !soundOn })
-            setSoundOn(!soundOn)
-          }}
+          aria-haspopup="dialog"
+          aria-expanded={soundPanelOpen}
+          aria-label="Sound settings"
+          onClick={() => setSoundPanelOpen((open) => !open)}
           className="flex items-center gap-2 rounded-md px-3 py-2 transition-opacity hover:opacity-90"
           style={{
             background: 'rgba(44,44,44,0.4)',
@@ -639,6 +702,26 @@ export default function TimerApp() {
             {soundOn ? 'Sound' : 'Muted'}
           </span>
         </button>
+
+        {soundPanelOpen && (
+          <SoundPanel scene={scene} triggerRef={soundButtonRef} onClose={() => setSoundPanelOpen(false)} />
+        )}
+
+        {/* The parent page's gesture doesn't always reach a cross-origin
+            embed — iOS in particular. This gives the person a tap that does. */}
+        {youtubeAudioBlocked && soundOn && scene.youtube && customSoundSource === 'video' && (
+          <button
+            type="button"
+            onClick={() => youtubeControlsRef.current?.retryUnmute()}
+            className="mt-2 block rounded-md px-3 py-2 text-[12px] leading-none text-[#f5f5f5] transition-opacity hover:opacity-90"
+            style={{
+              background: 'rgba(44,44,44,0.55)',
+              border: '0.5px solid rgba(246,246,243,0.35)',
+            }}
+          >
+            Tap to enable sound
+          </button>
+        )}
       </div>
 
       {/* Fullscreen + settings — top right */}
@@ -767,7 +850,14 @@ export default function TimerApp() {
 
       {/* Scene picker — bottom center */}
       <div className={`absolute ${isLandscape ? 'bottom-2' : 'bottom-6'} ${chromeClass}`}>
-        <ScenePicker />
+        <ScenePicker
+          editorOpen={sceneEditorOpen}
+          editorError={sceneEditorError}
+          onEditorOpenChange={(open) => {
+            setSceneEditorOpen(open)
+            if (!open) setSceneEditorError(null)
+          }}
+        />
       </div>
 
       {showResetToast && (
