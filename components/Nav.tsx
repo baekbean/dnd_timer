@@ -7,11 +7,19 @@ import { track } from '@vercel/analytics'
 import { GOOGLE_FORM_BASE_URL } from '@/lib/constants'
 import { trackWaitlistClick } from '@/lib/ga'
 
-export default function Nav() {
-  const [scrolled, setScrolled] = useState(false)
+type Props = {
+  // Pages with no dark hero image behind the nav (e.g. /updates) — the
+  // white-on-transparent "unscrolled" look is illegible without one, so
+  // always render the scrolled (dark-on-light) styling.
+  overLightBackground?: boolean
+}
+
+export default function Nav({ overLightBackground = false }: Props = {}) {
+  const [scrolledState, setScrolledState] = useState(false)
+  const scrolled = scrolledState || overLightBackground
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 80)
+    const handler = () => setScrolledState(window.scrollY > 80)
     window.addEventListener('scroll', handler, { passive: true })
     return () => window.removeEventListener('scroll', handler)
   }, [])
