@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import MobileHandoffSheet from '@/components/timer/MobileHandoffSheet'
 import {
@@ -106,7 +106,7 @@ describe('MobileHandoffSheet', () => {
     act(() => vi.advanceTimersByTime(260))
 
     expect(share).toHaveBeenCalledOnce()
-    expect(trackMobileHandoffShare).toHaveBeenCalledOnce()
+    expect(trackMobileHandoffShare).toHaveBeenCalledWith({ method: 'share_api' })
     expect(onClose).toHaveBeenCalledOnce()
   })
 
@@ -190,7 +190,7 @@ describe('MobileHandoffSheet', () => {
       await Promise.resolve()
     })
 
-    expect(trackMobileHandoffShare).toHaveBeenCalledOnce()
+    expect(trackMobileHandoffShare).toHaveBeenCalledWith({ method: 'copy_fallback' })
     expect(screen.getByRole('status').textContent).toContain('Link copied')
     expect(document.querySelector('textarea')).toBeNull()
   })
