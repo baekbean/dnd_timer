@@ -1,5 +1,19 @@
 # TODOS
 
+## Timer app
+
+### Fix stale getScene() in the experimental /timer-test2 route
+
+**What:** `components/timer-test2/TimerAppYoutube.tsx:292` resolves the active scene with `getScene(sceneId)` instead of `resolveScene(sceneId, customYoutubeId)`.
+
+**Why:** `getScene` alone silently falls back to `SCENES[0]` for the custom scene id — picking the custom video tile in this route reverts to the default scene instead of showing the custom video.
+
+**Context:** Noticed by `/ship`'s pre-landing review on 2026-07-30. Pre-existing (not introduced by the Reshaped-migration branch), and scoped to `/timer-test2`, an experimental comparison route not linked from the shipped app — no production impact. The production route (`ScenePicker.tsx` → `TimerApp.tsx`) already uses `resolveScene` correctly.
+
+**Effort:** S
+**Priority:** P2
+**Depends on:** None
+
 ## SEO
 
 ### Consolidate app/layout.tsx metadata onto lib/seo constants

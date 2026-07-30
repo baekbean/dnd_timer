@@ -1,3 +1,5 @@
+import { customVideoOverlay } from '@/lib/timer/legibility'
+
 export interface SceneAmbientFile {
   kind: 'file'
   src: string
@@ -18,6 +20,8 @@ export interface Scene {
   }
   /** Static background image, used when there's no video for the scene. */
   backgroundImage?: string
+  /** A YouTube video standing in for the background — user-supplied, see CUSTOM_SCENE_ID. */
+  youtube?: { videoId: string }
   /** Shown behind/instead of video while it loads or if it fails. */
   fallbackGradient: string
   /** Color wash over the video, matching the landing hero treatment. */
@@ -64,6 +68,37 @@ export const SCENES: Scene[] = [
 
 export const DEFAULT_SCENE_ID = SCENES[0].id
 
+/** The one user-owned scene slot — never a member of SCENES. */
+export const CUSTOM_SCENE_ID = 'custom'
+
+/** Ships in the custom slot so it plays something the moment it's picked. */
+export const DEFAULT_CUSTOM_YOUTUBE_ID = 'z9Ug-3qhrwY'
+
 export function getScene(id: string): Scene {
   return SCENES.find((s) => s.id === id) ?? SCENES[0]
+}
+
+export function buildCustomScene(videoId: string): Scene {
+  return {
+    id: CUSTOM_SCENE_ID,
+    name: 'My video',
+    youtube: { videoId },
+    fallbackGradient: 'linear-gradient(160deg, #2b2b30 0%, #1a1a1f 55%, #0c0c10 100%)',
+    // A flat wash over the whole video — simpler than a centered vignette,
+    // but weaker against bright content; see lib/timer/legibility.ts's
+    // contrastRatio tests for exactly where this falls short of WCAG AA.
+    overlay: customVideoOverlay,
+    // Only used when customSoundSource is 'app' (see TimerApp) — otherwise
+    // the video's own audio plays instead.
+    ambient: { kind: 'noise' },
+  }
+}
+
+/**
+ * The scene lookup every caller should use. `getScene` alone silently resolves
+ * the custom id to SCENES[0], so anything reading `sceneId` straight out of the
+ * store has to come through here or the custom background disappears.
+ */
+export function resolveScene(sceneId: string, customYoutubeId: string): Scene {
+  return sceneId === CUSTOM_SCENE_ID ? buildCustomScene(customYoutubeId) : getScene(sceneId)
 }

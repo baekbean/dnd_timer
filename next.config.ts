@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // A stray package-lock.json under the user's home directory (from an
+  // out-of-project `npm install` at some point) otherwise makes Turbopack's
+  // root auto-detection walk up past this project — corrupting absolute
+  // paths computed elsewhere (e.g. reshaped's postcss plugin config) and
+  // triggering the "detected multiple lockfiles" warning. `next build`/`next
+  // dev` are always invoked with cwd at the project root, so this is safe
+  // (import.meta.url isn't, since Next compiles this config to CJS).
+  turbopack: {
+    root: process.cwd(),
+  },
   // Dev-only: lets phones on the local network load dev-server assets (HMR,
   // hydration bundles) when visiting via the machine's LAN IP. No effect in prod.
   allowedDevOrigins: ["192.168.18.107"],

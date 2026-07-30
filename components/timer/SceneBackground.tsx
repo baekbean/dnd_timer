@@ -1,13 +1,31 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
+import YoutubeLayer, { type YoutubeControls } from '@/components/timer/YoutubeLayer'
 import type { Scene } from '@/lib/timer/scenes'
 
 const MAX_RETRIES = 5
 const BASE_RETRY_DELAY_MS = 500
 const MAX_RETRY_DELAY_MS = 5000
 
-export default function SceneBackground({ scene }: { scene: Scene }) {
+interface Props {
+  scene: Scene
+  /** Only meaningful for a YouTube scene — ignored by the video/image paths. */
+  soundOn?: boolean
+  volume?: number
+  onYoutubeError?: (code: number) => void
+  onYoutubeAudioBlockedChange?: (blocked: boolean) => void
+  youtubeControlsRef?: RefObject<YoutubeControls | null>
+}
+
+export default function SceneBackground({
+  scene,
+  soundOn = false,
+  volume = 0,
+  onYoutubeError,
+  onYoutubeAudioBlockedChange,
+  youtubeControlsRef,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   // Self-healing playback: iOS discards a backgrounded PWA's video decode
@@ -119,7 +137,18 @@ export default function SceneBackground({ scene }: { scene: Scene }) {
             {scene.video.mp4 && <source src={scene.video.mp4} type="video/mp4" />}
           </video>
         )}
-        {!scene.video && scene.backgroundImage && (
+        {scene.youtube && (
+          <YoutubeLayer
+            key={scene.youtube.videoId}
+            videoId={scene.youtube.videoId}
+            soundOn={soundOn}
+            volume={volume}
+            onError={onYoutubeError ?? (() => {})}
+            onAudioBlockedChange={onYoutubeAudioBlockedChange ?? (() => {})}
+            controlsRef={youtubeControlsRef}
+          />
+        )}
+        {!scene.video && !scene.youtube && scene.backgroundImage && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={scene.id}

@@ -1,8 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Button, Modal, Switch } from 'reshaped'
 import { submitFeedbackSilently } from '@/lib/constants'
-import { trackFeedbackClick, trackFeedbackSubmit } from '@/lib/ga'
+import {
+  trackDurationPresetClick,
+  trackFeedbackClick,
+  trackFeedbackSubmit,
+  trackSettingsSaved,
+  trackSettingsToggleChange,
+} from '@/lib/ga'
 import { useTimerStore, type TimerSettings, type Phase } from '@/lib/timer/store'
 import posthog from 'posthog-js'
 
@@ -36,6 +43,7 @@ function DurationField({
   max,
   presets,
   onChange,
+  onPresetClick,
 }: {
   label: string
   value: number
@@ -43,6 +51,8 @@ function DurationField({
   max: number
   presets?: number[]
   onChange: (v: number) => void
+  /** Fired only for the preset shortcut chips, not manual typing into the field. */
+  onPresetClick?: (v: number) => void
 }) {
   // Local, freely-editable text so the field can sit empty or mid-typed without
   // being clamped back on every keystroke. Only finalized (clamped) on blur.
@@ -70,14 +80,17 @@ function DurationField({
         {presets && presets.length > 0 && (
           <div className="flex gap-1.5">
             {presets.map((preset) => (
-              <button
+              <Button
                 key={preset}
-                type="button"
-                onClick={() => onChange(preset)}
-                className="rounded-full bg-[rgba(52,52,52,0.06)] px-2 py-1 font-pretendard text-[12px] text-[rgba(52,52,52,0.7)] outline-none transition-colors hover:bg-[rgba(52,52,52,0.12)] active:bg-[#74856E] active:text-white"
+                onClick={() => {
+                  onChange(preset)
+                  onPresetClick?.(preset)
+                }}
+                size="small"
+                variant="outline"
               >
                 {preset}
-              </button>
+              </Button>
             ))}
           </div>
         )}
@@ -107,49 +120,25 @@ function DurationField({
 
 function ToggleField({
   label,
+  name,
   checked,
   onChange,
 }: {
   label: string
+  name: string
   checked: boolean
   onChange: (v: boolean) => void
 }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4">
+    <div className="flex items-center justify-between gap-4">
       <span className="font-pretendard text-[15px] text-[#343434]">{label}</span>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className="relative h-7 w-12 rounded-full transition-colors"
-        style={{ background: checked ? '#74856E' : 'rgba(52,52,52,0.2)' }}
-      >
-        <span
-          className="absolute top-1 h-5 w-5 rounded-full bg-white transition-all"
-          style={{ left: checked ? 'calc(100% - 24px)' : '4px' }}
-        />
-      </button>
-    </label>
-  )
-}
-
-function VolumeField() {
-  const volume = useTimerStore((s) => s.volume)
-  const setVolume = useTimerStore((s) => s.setVolume)
-
-  return (
-    <label className="flex items-center justify-between gap-4">
-      <span className="font-pretendard text-[15px] text-[#343434]">Volume</span>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={Math.round(volume * 100)}
-        onChange={(e) => setVolume(Number(e.target.value) / 100)}
-        className="w-40 accent-[#74856E]"
+      <Switch
+        name={name}
+        checked={checked}
+        onChange={({ checked }) => onChange(checked)}
+        inputAttributes={{ 'aria-label': label }}
       />
-    </label>
+    </div>
   )
 }
 
@@ -257,6 +246,7 @@ export default function SettingsPanel({ onClose }: Props) {
     }
 
     updateSettings(patch)
+    trackSettingsSaved(patch)
     posthog.capture('settings_saved', patch)
     onClose()
   }
@@ -268,6 +258,7 @@ export default function SettingsPanel({ onClose }: Props) {
       } else {
         updateSettings(pending)
       }
+      trackSettingsSaved({ ...pending, apply_mode: mode })
       posthog.capture('settings_saved', { ...pending, apply_mode: mode })
     }
     setPending(null)
@@ -275,14 +266,8 @@ export default function SettingsPanel({ onClose }: Props) {
   }
 
   return (
-    <div
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 p-4"
-      onClick={requestClose}
-    >
-      <div
-        className="w-full max-w-[400px] rounded-2xl bg-white p-8 shadow-[0px_4px_24px_rgba(0,0,0,0.15)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <>
+      <Modal active onClose={requestClose} ariaLabel="Settings">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-aspekta text-[18px] uppercase text-[#343434]">Settings</h2>
           <button
@@ -305,6 +290,10 @@ export default function SettingsPanel({ onClose }: Props) {
             max={9999}
             presets={[60, 50, 30, 25]}
             onChange={(v) => setDraftField({ focusMin: v })}
+            onPresetClick={(v) => {
+              trackDurationPresetClick({ field: 'focus', value: v })
+              posthog.capture('duration_preset_click', { field: 'focus', value: v })
+            }}
           />
           <DurationField
             label="Break"
@@ -313,6 +302,10 @@ export default function SettingsPanel({ onClose }: Props) {
             max={9999}
             presets={[15, 10, 5]}
             onChange={(v) => setDraftField({ shortBreakMin: v })}
+            onPresetClick={(v) => {
+              trackDurationPresetClick({ field: 'break', value: v })
+              posthog.capture('duration_preset_click', { field: 'break', value: v })
+            }}
           />
           <DurationField
             label="Sessions"
@@ -321,71 +314,68 @@ export default function SettingsPanel({ onClose }: Props) {
             max={8}
             presets={[4, 3, 2, 1]}
             onChange={(v) => setDraftField({ sessionsPerCycle: v })}
+            onPresetClick={(v) => {
+              trackDurationPresetClick({ field: 'sessions', value: v })
+              posthog.capture('duration_preset_click', { field: 'sessions', value: v })
+            }}
           />
-
-          <div className="my-1 h-px bg-[#343434]/10" />
-
-          <VolumeField />
 
           <div className="my-1 h-px bg-[#343434]/10" />
 
           <ToggleField
             label="Auto-start breaks"
+            name="auto-start-breaks"
             checked={settings.autoStartBreaks}
-            onChange={(v) => set({ autoStartBreaks: v })}
+            onChange={(v) => {
+              trackSettingsToggleChange({ field: 'auto_start_breaks', value: v })
+              posthog.capture('settings_toggle_change', { field: 'auto_start_breaks', value: v })
+              set({ autoStartBreaks: v })
+            }}
           />
           <ToggleField
             label="Auto-start focus"
+            name="auto-start-focus"
             checked={settings.autoStartFocus}
-            onChange={(v) => set({ autoStartFocus: v })}
+            onChange={(v) => {
+              trackSettingsToggleChange({ field: 'auto_start_focus', value: v })
+              posthog.capture('settings_toggle_change', { field: 'auto_start_focus', value: v })
+              set({ autoStartFocus: v })
+            }}
           />
           <ToggleField
             label="Notify when session ends"
+            name="notify-on-complete"
             checked={settings.notifyOnComplete}
             onChange={async (v) => {
               if (v && typeof Notification !== 'undefined' && Notification.permission === 'default') {
                 const result = await Notification.requestPermission()
                 if (result !== 'granted') return
               }
+              trackSettingsToggleChange({ field: 'notify_on_complete', value: v })
+              posthog.capture('settings_toggle_change', { field: 'notify_on_complete', value: v })
               set({ notifyOnComplete: v })
             }}
           />
 
           <FeedbackLink />
         </div>
-      </div>
+      </Modal>
 
       {pending && (
-        <div
-          className="absolute inset-0 z-30 flex items-center justify-center bg-black/30 p-4"
-          onClick={() => resolvePending('next')}
-        >
-          <div
-            className="w-full max-w-[340px] rounded-2xl bg-white p-6 shadow-[0px_4px_24px_rgba(0,0,0,0.15)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="mb-5 font-pretendard text-[15px] leading-relaxed text-[#343434]">
-              Apply the new time to your current session right now, or wait until the next session?
-            </p>
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => resolvePending('now')}
-                className="rounded-lg bg-[#74856E] px-4 py-2 font-pretendard text-[14px] text-white transition-opacity hover:opacity-90"
-              >
-                Apply now
-              </button>
-              <button
-                type="button"
-                onClick={() => resolvePending('next')}
-                className="rounded-lg border border-[#343434]/15 px-4 py-2 font-pretendard text-[14px] text-[#343434] transition-colors hover:bg-[#343434]/5"
-              >
-                Apply next session
-              </button>
-            </div>
+        <Modal active onClose={() => resolvePending('next')} ariaLabel="Apply new time">
+          <p className="mb-5 font-pretendard text-[15px] leading-relaxed text-[#343434]">
+            Apply the new time to your current session right now, or wait until the next session?
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button onClick={() => resolvePending('now')} color="primary">
+              Apply now
+            </Button>
+            <Button onClick={() => resolvePending('next')} variant="outline">
+              Apply next session
+            </Button>
           </div>
-        </div>
+        </Modal>
       )}
-    </div>
+    </>
   )
 }

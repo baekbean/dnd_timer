@@ -234,7 +234,7 @@ export default function TimerAppFeather() {
 
   useEffect(() => {
     if (status === 'running' && soundOn) {
-      soundEngine.startAmbient(getScene(sceneId))
+      soundEngine.startAmbient('brown')
       return () => soundEngine.stopAmbient()
     }
   }, [status, soundOn, sceneId])

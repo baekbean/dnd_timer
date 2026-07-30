@@ -195,12 +195,13 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
           unlockAction()
           return
         }
-        trackMobileHandoffShare()
+        trackMobileHandoffShare({ method: 'copy_fallback' })
+        posthog.capture('mobile_handoff_share', { method: 'copy_fallback' })
         setCopyToast(true)
         closeAfter(1400)
         return
       }
-      trackMobileHandoffShare()
+      trackMobileHandoffShare({ method: 'share_api' })
       posthog.capture('mobile_handoff_share', { method: 'share_api' })
       closeAfter(0)
       return
@@ -211,7 +212,7 @@ export default function MobileHandoffSheet({ onClose }: { onClose: () => void })
       unlockAction()
       return
     }
-    trackMobileHandoffShare()
+    trackMobileHandoffShare({ method: 'copy_fallback' })
     posthog.capture('mobile_handoff_share', { method: 'copy_fallback' })
     setCopyToast(true)
     closeAfter(1400)

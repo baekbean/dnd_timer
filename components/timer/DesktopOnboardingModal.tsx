@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { Modal } from 'reshaped'
 import { trackDesktopOnboardingShareClick, trackDesktopOnboardingShareOutcome } from '@/lib/ga'
 import posthog from 'posthog-js'
 
@@ -62,19 +63,9 @@ const CONTENT: Record<BrowserType, { title: string; steps: { label: string; deta
 export default function DesktopOnboardingModal({ onClose }: { onClose: () => void }) {
   const browser = detectBrowser()
   const { title, steps } = CONTENT[browser]
-  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const [shareSupported] = useState(
     () => browser === 'ios' && typeof navigator !== 'undefined' && typeof navigator.share === 'function'
   )
-
-  useEffect(() => {
-    closeButtonRef.current?.focus()
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
 
   const handleShare = async () => {
     trackDesktopOnboardingShareClick()
@@ -93,83 +84,68 @@ export default function DesktopOnboardingModal({ onClose }: { onClose: () => voi
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="onboarding-modal-title"
+    <Modal
+      active
+      onClose={onClose}
+      ariaLabel={title}
+      blurredOverlay
+      className="!border-[0.5px] !border-[rgba(246,246,243,0.15)] !bg-[rgba(28,28,28,0.95)] !backdrop-blur-[20px]"
     >
-      <div
-        className="relative w-full max-w-sm rounded-2xl px-8 py-8"
-        style={{
-          background: 'rgba(28,28,28,0.95)',
-          border: '0.5px solid rgba(246,246,243,0.15)',
-          backdropFilter: 'blur(20px)',
-        }}
+      {/* Close button */}
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100"
+        style={{ background: 'rgba(246,246,243,0.1)' }}
       >
-        {/* Close button */}
+        <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+          <path d="M2 2L12 12M12 2L2 12" stroke="#f5f5f5" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {/* Title */}
+      <p className="font-pretendard text-[15px] font-semibold leading-snug text-[#f6f6f3]">{title}</p>
+      <p className="mt-1 font-pretendard text-[12px] text-[#f6f6f3]/50">
+        Keep DnD Timer one tap away
+      </p>
+
+      {/* Steps */}
+      <ol className="mt-6 flex flex-col gap-4">
+        {steps.map((step, i) => (
+          <li key={i} className="flex gap-3">
+            <span
+              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-pretendard text-[11px] font-semibold text-[#1c1c1c]"
+              style={{ background: 'rgba(246,246,243,0.85)' }}
+            >
+              {i + 1}
+            </span>
+            <div className="flex flex-col gap-0.5">
+              <span className="font-pretendard text-[13px] text-[#f6f6f3]">{step.label}</span>
+              {step.detail && (
+                <span className="font-pretendard text-[12px] text-[#f6f6f3]/50">{step.detail}</span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {/* iOS Share CTA — only shown when Web Share API is available */}
+      {shareSupported && (
         <button
-          ref={closeButtonRef}
           type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute right-5 top-5 flex h-7 w-7 items-center justify-center rounded-full opacity-50 transition-opacity hover:opacity-100"
-          style={{ background: 'rgba(246,246,243,0.1)' }}
+          onClick={handleShare}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 font-pretendard text-[13px] font-semibold text-[#1c1c1c] transition-opacity hover:opacity-90 active:opacity-75"
+          style={{ background: 'rgba(246,246,243,0.92)' }}
         >
-          <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-            <path d="M2 2L12 12M12 2L2 12" stroke="#f5f5f5" strokeWidth="1.6" strokeLinecap="round" />
+          {/* iOS Share icon */}
+          <svg width="14" height="16" viewBox="0 0 14 18" fill="none">
+            <path d="M7 1v11M3 4L7 1l4 3" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M1 9v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" />
           </svg>
+          Open Share Sheet
         </button>
-
-        {/* Title */}
-        <p
-          id="onboarding-modal-title"
-          className="font-pretendard text-[15px] font-semibold leading-snug text-[#f6f6f3]"
-        >
-          {title}
-        </p>
-        <p className="mt-1 font-pretendard text-[12px] text-[#f6f6f3]/50">
-          Keep DnD Timer one tap away
-        </p>
-
-        {/* Steps */}
-        <ol className="mt-6 flex flex-col gap-4">
-          {steps.map((step, i) => (
-            <li key={i} className="flex gap-3">
-              <span
-                className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-pretendard text-[11px] font-semibold text-[#1c1c1c]"
-                style={{ background: 'rgba(246,246,243,0.85)' }}
-              >
-                {i + 1}
-              </span>
-              <div className="flex flex-col gap-0.5">
-                <span className="font-pretendard text-[13px] text-[#f6f6f3]">{step.label}</span>
-                {step.detail && (
-                  <span className="font-pretendard text-[12px] text-[#f6f6f3]/50">{step.detail}</span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-
-        {/* iOS Share CTA — only shown when Web Share API is available */}
-        {shareSupported && (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl py-3 font-pretendard text-[13px] font-semibold text-[#1c1c1c] transition-opacity hover:opacity-90 active:opacity-75"
-            style={{ background: 'rgba(246,246,243,0.92)' }}
-          >
-            {/* iOS Share icon */}
-            <svg width="14" height="16" viewBox="0 0 14 18" fill="none">
-              <path d="M7 1v11M3 4L7 1l4 3" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M1 9v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9" stroke="#1c1c1c" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-            Open Share Sheet
-          </button>
-        )}
-      </div>
-    </div>
+      )}
+    </Modal>
   )
 }

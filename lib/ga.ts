@@ -110,6 +110,48 @@ export function trackSceneExposure(params: {
   gtagEvent('scene_exposure', params)
 }
 
+// ── custom YouTube background ───────────────────────────────────
+/** The link editor was opened — funnel start for setting a custom background. */
+export function trackCustomSceneEditorOpen() {
+  gtagEvent('custom_scene_editor_open', {})
+}
+
+/**
+ * A link was accepted and is now the custom background — `is_default`
+ * distinguishes a genuinely custom URL from resetting back to the shipped
+ * default (same call path, same event, different outcome).
+ */
+export function trackCustomSceneSet(params: { video_id: string; is_default: boolean }) {
+  gtagEvent('custom_scene_set', params)
+}
+
+/** A pasted link couldn't be parsed — shows which link shapes we're still missing. */
+export function trackCustomSceneInvalidUrl() {
+  gtagEvent('custom_scene_invalid_url', {})
+}
+
+/** The player refused the video (2/5 = player error, 100 = gone, 101/150 = embedding disabled). */
+export function trackCustomSceneError(params: { code: number }) {
+  gtagEvent('custom_scene_error', params)
+}
+
+/** The browser wouldn't unmute the embed — measures how often the iOS fallback is needed. */
+export function trackCustomSceneUnmuteBlocked() {
+  gtagEvent('custom_scene_unmute_blocked', {})
+}
+
+/** Toggled between the app's synthesized ambient and the video's own audio track. */
+export function trackCustomSceneSoundSource(params: { source: 'app' | 'video' }) {
+  gtagEvent('custom_scene_sound_source', params)
+}
+
+/** A different ambient noise preset was picked from the Sound panel. */
+export function trackAmbientPresetChange(params: {
+  preset: 'white' | 'brown' | 'rain' | 'birds' | 'gardenCrickets' | 'nightBugs'
+}) {
+  gtagEvent('ambient_preset_change', params)
+}
+
 export function trackFullscreenEnter() {
   gtagEvent('fullscreen_enter', {})
 }
@@ -123,6 +165,33 @@ export function trackSoundToggle(params: { sound_on: boolean }) {
 /** Fired from the not-found page so broken/stale links show up as diagnosable data instead of a dead end. */
 export function trackNotFound(params: { attempted_path: string; referrer: string }) {
   gtagEvent('404_hit', params)
+}
+
+// ── settings panel ──────────────────────────────────────────────
+/** A Focus/Break/Sessions shortcut chip was clicked, as opposed to typing a custom value. */
+export function trackDurationPresetClick(params: {
+  field: 'focus' | 'break' | 'sessions'
+  value: number
+}) {
+  gtagEvent('duration_preset_click', params)
+}
+
+/** An Auto-start/Notify switch was flipped in Settings. */
+export function trackSettingsToggleChange(params: {
+  field: 'auto_start_breaks' | 'auto_start_focus' | 'notify_on_complete'
+  value: boolean
+}) {
+  gtagEvent('settings_toggle_change', params)
+}
+
+/** The settings modal was closed with pending duration changes — fires the diff that changed. */
+export function trackSettingsSaved(params: {
+  focusMin?: number
+  shortBreakMin?: number
+  sessionsPerCycle?: number
+  apply_mode?: 'now' | 'next'
+}) {
+  gtagEvent('settings_saved', params)
 }
 
 // ── feedback flow ───────────────────────────────────────────────
@@ -181,11 +250,11 @@ export function trackMobileHandoffContinue() {
 
 /**
  * Primary CTA completed — either the native share sheet was actually
- * shared through, or (Web Share API unsupported) the link was copied as
- * the automatic fallback. Fires only on real completion, never on cancel.
+ * shared through, or (Web Share API unsupported, or share failed) the link
+ * was copied instead. Fires only on real completion, never on cancel.
  */
-export function trackMobileHandoffShare() {
-  gtagEvent('mobile_handoff_share', getHandoffContext())
+export function trackMobileHandoffShare(params: { method: 'share_api' | 'copy_fallback' }) {
+  gtagEvent('mobile_handoff_share', { ...getHandoffContext(), ...params })
 }
 
 /** Secondary CTA clicked — email input UI revealed. */
