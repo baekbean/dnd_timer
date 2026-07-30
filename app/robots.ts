@@ -10,12 +10,13 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
       },
-      // Block AI training crawlers
+      // Block pure AI-training crawlers (no referral traffic). AI search/answer
+      // bots that can actually send users here — OAI-SearchBot, ChatGPT-User,
+      // PerplexityBot — are deliberately left off this list and fall through
+      // to the "*" allow rule above.
       {
         userAgent: [
           'GPTBot',          // OpenAI
-          'ChatGPT-User',    // OpenAI ChatGPT browsing
-          'OAI-SearchBot',   // OpenAI search
           'ClaudeBot',       // Anthropic
           'anthropic-ai',    // Anthropic
           'Claude-Web',      // Anthropic
@@ -24,7 +25,6 @@ export default function robots(): MetadataRoute.Robots {
           'Applebot-Extended', // Apple AI
           'meta-externalagent', // Meta AI
           'Bytespider',      // ByteDance/TikTok
-          'PerplexityBot',   // Perplexity AI
           'Diffbot',         // AI data extraction
           'omgili',          // Omgili data harvesting
           'omgilibot',
