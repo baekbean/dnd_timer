@@ -1,8 +1,22 @@
 import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/next'
+import { Reshaped } from 'reshaped'
 import { GA_MEASUREMENT_ID } from '@/lib/ga'
 import './globals.css'
+// Imported as a real ES import (not via @csstools/postcss-global-data —
+// see postcss.config.mjs) so its @custom-media definitions land in
+// Turbopack's tracked module graph, in the same concatenated global
+// stylesheet as bundle.css's `@media (--rs-viewport-*)` usages.
+import 'reshaped/themes/slate/media.css'
+// slate's own token file — bundle.css has no theme tokens at all, only
+// component styles that reference `var(--rs-*)`. Imported before
+// reshaped-theme.css so our overrides win the cascade for the tokens both
+// define, while everything neither of us touches (spacing units, duration/
+// easing, font-weight scale, viewport breakpoints) still resolves from slate.
+import 'reshaped/themes/slate/theme.css'
+import 'reshaped/bundle.css'
+import './reshaped-theme.css'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://nooktimer.com'),
@@ -91,7 +105,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        {children}
+        {/* "slate" supplies every base token (spacing, duration, easing,
+            font-weight scale, viewport) our own theme doesn't redefine —
+            "nooktimer" (app/reshaped-theme.css) layers brand overrides
+            (color/font-family/radius/shadow) on top via CSS cascade. */}
+        <Reshaped defaultTheme={['slate', 'nooktimer']} defaultColorMode="light">
+          {children}
+        </Reshaped>
         <Analytics />
 
         {GA_MEASUREMENT_ID && (

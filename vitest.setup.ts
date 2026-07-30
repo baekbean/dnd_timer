@@ -30,10 +30,18 @@ function createMatchMedia() {
     }) as unknown as MediaQueryList
 }
 
+/** jsdom has no ResizeObserver, and Reshaped's Popover/ScrollArea observe size on mount. */
+class MockResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 beforeEach(() => {
   Object.defineProperty(window, 'localStorage', { configurable: true, value: createStorage() })
   Object.defineProperty(window, 'sessionStorage', { configurable: true, value: createStorage() })
   Object.defineProperty(window, 'matchMedia', { configurable: true, value: createMatchMedia() })
+  Object.defineProperty(window, 'ResizeObserver', { configurable: true, value: MockResizeObserver })
 })
 
 afterEach(() => {
