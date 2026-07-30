@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import SeoFeedbackLink from '@/components/timer/SeoFeedbackLink'
 import { FAQ_ITEMS } from '@/lib/seo'
 
@@ -77,7 +78,14 @@ export default function SeoContent() {
           </div>
         </div>
 
-        <footer className="border-t border-[#2c2c2c] pt-8 text-[13px] leading-[1.6] text-[#8a8a85]">
+        <footer className="border-t border-[#2c2c2c] pt-8 text-[13px] leading-[1.6] text-[#8a8a85] flex flex-col gap-2">
+          <p>
+            Curious what we&apos;ve shipped lately?{' '}
+            <Link href="/updates" className="underline hover:text-[#d9d9d4]">
+              Check the Updates page
+            </Link>
+            .
+          </p>
           <p>
             Got thoughts on NookTimer? <SeoFeedbackLink />.
           </p>
