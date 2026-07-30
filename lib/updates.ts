@@ -20,6 +20,18 @@ export const UPDATE_POSTS: UpdatePost[] = [
       `And if any of this breaks, looks weird, or you just have thoughts — there's a "Send feedback" link at the bottom of that new section. We read every one.`,
     ],
   },
+  {
+    slug: 'new-sounds-and-custom-backgrounds',
+    title: 'New sounds, and pick your own background',
+    date: '2026-07-30',
+    excerpt:
+      'Paste any YouTube link to use it as your scene, and choose from five new ambient sounds — real recordings, not just synthesized noise.',
+    body: [
+      `If none of the built-in scenes matched your vibe, you can now paste any YouTube link and use it as your background. A lo-fi mix, a fireplace loop, a windows-down highway drive at night — whatever gets you into your zone, drop the link in and it becomes your timer.`,
+      `We also expanded the ambient sound options from one synthesized noise bed to six: brown noise, white noise, rain, birdsong, garden crickets, and night bugs. Four of those are real field recordings, not approximations — pick whichever one gets you focused.`,
+      `Try it out and let us know what you think — what's missing, what feels off, what you'd want next. We read every message.`,
+    ],
+  },
 ]
 
 export function getUpdatePost(slug: string): UpdatePost | undefined {

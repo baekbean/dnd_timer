@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import UpdatesFeedbackLink from '@/components/timer/UpdatesFeedbackLink'
 import { blogPostingJsonLd, serializeJsonLd, SITE_URL } from '@/lib/seo'
 import { getUpdatePost, UPDATE_POSTS } from '@/lib/updates'
 
@@ -63,6 +64,10 @@ export default async function UpdatePostPage({ params }: Props) {
             </p>
           ))}
         </div>
+
+        <p className="font-pretendard text-[14px] text-[#343434]/70">
+          Questions or feedback on this update? <UpdatesFeedbackLink />.
+        </p>
 
         <Link
           href="/updates"

@@ -5,6 +5,7 @@ import UpdatePostPage, {
   generateMetadata,
   generateStaticParams,
 } from '@/app/updates/[slug]/page'
+import { FEEDBACK_FORM_URL } from '@/lib/constants'
 import { blogPostingJsonLd } from '@/lib/seo'
 import { getUpdatePost, UPDATE_POSTS } from '@/lib/updates'
 
@@ -12,6 +13,12 @@ describe('getUpdatePost', () => {
   it('resolves a known slug', () => {
     expect(getUpdatePost('easier-to-find')?.title).toBe(
       'We just made NookTimer easier to find'
+    )
+  })
+
+  it('resolves the second post', () => {
+    expect(getUpdatePost('new-sounds-and-custom-backgrounds')?.title).toBe(
+      'New sounds, and pick your own background'
     )
   })
 
@@ -62,6 +69,17 @@ describe('UpdatePostPage', () => {
     expect(scripts).toHaveLength(1)
     const jsonLd = JSON.parse(scripts[0].innerHTML) as { '@type': string }
     expect(jsonLd['@type']).toBe('BlogPosting')
+  })
+
+  it('renders a feedback link to the Google Form', async () => {
+    const post = UPDATE_POSTS[0]
+    const element = await UpdatePostPage({ params: Promise.resolve({ slug: post.slug }) })
+    render(element)
+
+    const link = screen.getByRole('link', { name: /send feedback/i })
+    expect(link.getAttribute('href')).toBe(FEEDBACK_FORM_URL)
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer')
   })
 
   it('returns empty metadata for an unknown slug instead of throwing', async () => {
