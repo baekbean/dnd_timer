@@ -2,6 +2,16 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.7] - 2026-07-31
+
+### Changed
+- The site header and footer (shared by About and Updates) now match the current Figma design: a "NookTimer" wordmark image replaces the old logo graphic, the nav button reads "Start focusing" and links straight into the timer instead of opening the waitlist form, and the footer's copyright and social links were tidied up (TikTok now points at the current account, Discord dropped, "Contact us" renamed to "Mail").
+- The Updates blog pages are back on the same shared header/footer as the rest of the site, instead of the bare minimal header they briefly had.
+- Removed the first Updates post (the SEO/discoverability writeup) and rewrote the remaining post's title and copy.
+
+### For contributors
+- Added a `start_focusing_click` analytics event (GA4 + PostHog) for the nav CTA, replacing the `join_waitlist`/`waitlist_click` tracking that button used to fire — see `EVENTS.md`.
+
 ## [0.0.1.6] - 2026-07-30
 
 ### Added
