@@ -25,7 +25,7 @@ export default function UpdatesPage() {
 
   return (
     <section className="relative w-full px-4 md:px-0">
-      <div className="mx-auto max-w-[720px] pt-[160px] pb-[160px] flex flex-col gap-16">
+      <div className="mx-auto max-w-[720px] pt-[80px] pb-[160px] flex flex-col gap-16">
         <h1 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3] text-[#343434]">
           Updates
         </h1>
