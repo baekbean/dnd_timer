@@ -7,9 +7,17 @@ const VIDEO_ID = 'abcdefghijk'
 // Minimal stand-in for the real YT.Player — captures the options it was
 // constructed with and tracks mute state so the audio effect's branches
 // (muted/unmuted/blocked) are all reachable without a real iframe.
+// YT.PlayerState numeric values, per the real IFrame API.
+const STATE_CUED = 5
+const STATE_PLAYING = 1
+
 function createFakePlayer(opts: { blockUnmute?: boolean } = {}) {
   const player = {
     _muted: true,
+    // Starts CUED (not playing) — tests that never touch this simulate a
+    // stuck/blocked autoplay; tests that flip it to STATE_PLAYING simulate
+    // playback actually catching.
+    _state: STATE_CUED,
     destroy: vi.fn(),
     mute: vi.fn(() => {
       player._muted = true
@@ -21,6 +29,7 @@ function createFakePlayer(opts: { blockUnmute?: boolean } = {}) {
     setVolume: vi.fn(),
     playVideo: vi.fn(),
     seekTo: vi.fn(),
+    getPlayerState: vi.fn(() => player._state),
   }
   return player
 }
@@ -60,7 +69,7 @@ function installFakeYT() {
         playerInstance = createFakePlayer(nextPlayerOpts)
         return playerInstance
       }),
-      PlayerState: { ENDED: 0 },
+      PlayerState: { ENDED: 0, PLAYING: STATE_PLAYING },
     },
   })
 }
@@ -177,6 +186,87 @@ describe('YoutubeLayer', () => {
 
     expect(playerInstance.seekTo).toHaveBeenCalledWith(0, true)
     expect(playerInstance.playVideo).toHaveBeenCalled()
+  })
+
+  it('re-issues playVideo with backoff when autoplay never actually starts', async () => {
+    vi.useFakeTimers()
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+    fireReady()
+    playerInstance.playVideo.mockClear()
+
+    // playerInstance._state stays CUED throughout — simulates a browser that
+    // silently refused autoplay without ever firing an error event.
+    act(() => {
+      vi.advanceTimersByTime(700) // first verify
+    })
+    expect(playerInstance.playVideo).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      vi.advanceTimersByTime(1000) // second verify (500ms * 2^1 backoff)
+    })
+    expect(playerInstance.playVideo).toHaveBeenCalledTimes(2)
+  })
+
+  it('stops retrying once playback actually starts', async () => {
+    vi.useFakeTimers()
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+    fireReady()
+    playerInstance.playVideo.mockClear()
+
+    playerInstance._state = STATE_PLAYING
+    act(() => {
+      vi.advanceTimersByTime(700)
+    })
+
+    expect(playerInstance.playVideo).not.toHaveBeenCalled()
+  })
+
+  it('clears the pending retry once an onStateChange PLAYING event fires', async () => {
+    vi.useFakeTimers()
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+    fireReady()
+    playerInstance.playVideo.mockClear()
+
+    act(() => {
+      capturedOptions!.events.onStateChange?.({ target: playerInstance, data: STATE_PLAYING })
+    })
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    })
+
+    expect(playerInstance.playVideo).not.toHaveBeenCalled()
+  })
+
+  it('exposes retryPlay via controlsRef, nudging playback only when not already playing', async () => {
+    const controlsRef = { current: null as YoutubeControls | null }
+    render(
+      <YoutubeLayer
+        videoId={VIDEO_ID}
+        soundOn={false}
+        volume={0.6}
+        onError={vi.fn()}
+        onAudioBlockedChange={vi.fn()}
+        controlsRef={controlsRef}
+      />
+    )
+    await flushMicrotasks()
+    fireReady()
+    playerInstance.playVideo.mockClear()
+
+    act(() => {
+      controlsRef.current!.retryPlay()
+    })
+    expect(playerInstance.playVideo).toHaveBeenCalledTimes(1)
+
+    playerInstance._state = STATE_PLAYING
+    playerInstance.playVideo.mockClear()
+    act(() => {
+      controlsRef.current!.retryPlay()
+    })
+    expect(playerInstance.playVideo).not.toHaveBeenCalled()
   })
 
   it('exposes retryUnmute via controlsRef, re-checking the blocked state synchronously', async () => {
