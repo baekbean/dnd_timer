@@ -1,11 +1,9 @@
 import Image from 'next/image'
-import Link from 'next/link'
 
 const socialLinks = [
-  { label: 'TikTok', href: 'https://www.tiktok.com/@dndtimer' },
+  { label: 'TikTok', href: 'https://www.tiktok.com/@hellodndroom' },
   { label: 'Instagram', href: 'https://www.instagram.com/dndtimer' },
-  { label: 'Discord', href: 'https://discord.gg/7UVmWRkdW' },
-  { label: 'Contact us', href: 'mailto:hello.dndroom@gmail.com' },
+  { label: 'Mail', href: 'mailto:hello.dndroom@gmail.com' },
 ]
 
 export default function Footer() {
@@ -22,9 +20,9 @@ export default function Footer() {
       <div className="relative flex items-end gap-10 w-full">
         {/* Logo */}
         <Image
-          src="/images/logo-dark.png"
-          alt="Do not Disturb Timer"
-          width={169}
+          src="/images/logo-wordmark.png"
+          alt="NookTimer"
+          width={87}
           height={17}
           className="flex-shrink-0"
         />
@@ -32,11 +30,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="flex-1">
           <p className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4]">
-            © 2026 Do not Disturb Timer
-            <span className="mx-2">·</span>
-            <Link href="/" className="hover:underline transition-opacity hover:opacity-60">
-              Try the timer (beta)
-            </Link>
+            © 2026 Nook Timer
           </p>
         </div>
 
