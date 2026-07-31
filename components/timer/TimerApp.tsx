@@ -556,6 +556,9 @@ export default function TimerApp() {
       trackTimerStart({ phase, scene_id: sceneId, focus_min: settings.focusMin })
       posthog.capture('timer_start', { phase, scene_id: sceneId, focus_min: settings.focusMin })
       start()
+      // Nudges playback from a real user gesture in case autoplay never
+      // actually caught (mobile browsers can block it silently).
+      youtubeControlsRef.current?.retryPlay()
     }
   }
 

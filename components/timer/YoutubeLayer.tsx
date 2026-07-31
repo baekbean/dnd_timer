@@ -12,6 +12,7 @@ interface YTPlayer {
   setVolume(volume: number): void
   playVideo(): void
   seekTo(seconds: number, allowSeekAhead: boolean): void
+  getPlayerState(): number
 }
 
 interface YTPlayerEvent {
@@ -35,7 +36,7 @@ interface YTNamespace {
       }
     }
   ) => YTPlayer
-  PlayerState: { ENDED: number }
+  PlayerState: { ENDED: number; PLAYING: number }
 }
 
 declare global {
@@ -45,10 +46,12 @@ declare global {
   }
 }
 
-/** Handed up to TimerApp so the chime can duck the music and the iOS
- *  "tap to enable sound" chip can retry from a real user gesture. */
+/** Handed up to TimerApp so the chime can duck the music, the iOS
+ *  "tap to enable sound" chip can retry from a real user gesture, and the
+ *  Start button can nudge playback if autoplay never actually caught. */
 export interface YoutubeControls {
   retryUnmute: () => void
+  retryPlay: () => void
   duck: (durationMs: number) => void
 }
 
@@ -61,6 +64,19 @@ const PLAYER_HOST = 'https://www.youtube-nocookie.com'
 const DUCKED_RATIO = 0.25
 /** Long enough for the player to honour (or refuse) unMute before we check. */
 const UNMUTE_VERIFY_MS = 400
+// Muted autoplay is supposed to be unconditional, but mobile browsers
+// (iOS Low Power Mode, a site-level "Never Auto-Play" setting, a slow
+// iframe_api load racing the ready event) sometimes leave the player
+// silently stuck on CUED/UNSTARTED with no error event at all. Poll and
+// re-issue playVideo() a few times with backoff instead of assuming the
+// first call took.
+const PLAY_RETRY_LIMIT = 5
+const PLAY_RETRY_BASE_MS = 500
+const PLAY_RETRY_MAX_MS = 5000
+const PLAY_FIRST_VERIFY_MS = 700
+/** YT.PlayerState.PLAYING — a stable, documented numeric constant in the
+ *  IFrame API, safe to use before window.YT has necessarily loaded. */
+const YT_STATE_PLAYING = 1
 
 let apiPromise: Promise<YTNamespace> | null = null
 
@@ -144,12 +160,42 @@ export default function YoutubeLayer({
 
     let cancelled = false
     let player: YTPlayer | null = null
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
+    let retryCount = 0
     const host = document.createElement('div')
     wrapper.appendChild(host)
+
+    const clearRetryTimer = () => {
+      if (retryTimer) {
+        clearTimeout(retryTimer)
+        retryTimer = null
+      }
+    }
 
     loadYoutubeApi()
       .then((YT) => {
         if (cancelled) return
+
+        // Checks whether playback actually caught; if not, re-issues
+        // playVideo() and checks again on a backoff, up to the retry limit.
+        const verifyPlaying = (delay: number) => {
+          clearRetryTimer()
+          retryTimer = setTimeout(() => {
+            retryTimer = null
+            if (cancelled || !player) return
+            try {
+              if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                retryCount = 0
+                return
+              }
+              if (retryCount >= PLAY_RETRY_LIMIT) return
+              retryCount += 1
+              player.playVideo()
+              verifyPlaying(Math.min(PLAY_RETRY_BASE_MS * 2 ** retryCount, PLAY_RETRY_MAX_MS))
+            } catch {}
+          }, delay)
+        }
+
         player = new YT.Player(host, {
           width: '100%',
           height: '100%',
@@ -176,12 +222,17 @@ export default function YoutubeLayer({
               if (cancelled) return
               event.target.playVideo()
               setReady(true)
+              verifyPlaying(PLAY_FIRST_VERIFY_MS)
             },
             onError: (event) => {
               if (cancelled) return
               callbacksRef.current.onError(event.data)
             },
             onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PLAYING) {
+                retryCount = 0
+                clearRetryTimer()
+              }
               // Backstop for the loop param, which doesn't cover every video
               if (event.data === YT.PlayerState.ENDED) {
                 event.target.seekTo(0, true)
@@ -198,6 +249,7 @@ export default function YoutubeLayer({
 
     return () => {
       cancelled = true
+      clearRetryTimer()
       setReady(false)
       playerRef.current = null
       try {
@@ -264,6 +316,16 @@ export default function YoutubeLayer({
           player.setVolume(Math.round(volume * 100))
           player.unMute()
           callbacksRef.current.onAudioBlockedChange(player.isMuted())
+        } catch {}
+      },
+      // The in-effect verify/retry loop covers most stuck-autoplay cases on
+      // its own, but a real user gesture is the only thing that can recover
+      // a browser-level autoplay block — so piggyback on the Start button.
+      retryPlay: () => {
+        const player = playerRef.current
+        if (!player) return
+        try {
+          if (player.getPlayerState() !== YT_STATE_PLAYING) player.playVideo()
         } catch {}
       },
       duck: (durationMs) => {
