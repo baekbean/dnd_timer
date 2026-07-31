@@ -68,4 +68,10 @@ describe('SeoContent', () => {
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
   })
+
+  it('links to the updates page', () => {
+    render(<SeoContent />)
+    const link = screen.getByRole('link', { name: /check the updates page/i })
+    expect(link.getAttribute('href')).toBe('/updates')
+  })
 })

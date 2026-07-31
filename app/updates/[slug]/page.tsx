@@ -47,7 +47,7 @@ export default async function UpdatePostPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(blogPostingJsonLd(post)) }}
       />
-      <div className="mx-auto max-w-[720px] pt-[80px] pb-[160px] flex flex-col gap-8">
+      <div className="mx-auto max-w-[720px] pt-[160px] pb-[160px] flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <p className="font-mono text-[12px] text-[#343434]/55 tracking-[-0.12px]">
             {post.date}
