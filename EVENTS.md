@@ -95,7 +95,8 @@ Same `getHandoffContext()` blob auto-injected on all of these.
 
 | Event | Fires when | Params | Destinations | Where |
 |---|---|---|---|---|---|
-| `join_waitlist` / `waitlist_click` | The waitlist form is submitted | `button_location` (`nav`\|`hero`\|`cta`), `button_text`, `email` (Vercel only) | Vercel Analytics + GA4 + PostHog, all three locations | Hero.tsx, Nav.tsx, Section3.tsx |
+| `join_waitlist` / `waitlist_click` | The waitlist form is submitted | `button_location` (`hero`\|`cta`), `button_text`, `email` (Vercel only) | Vercel Analytics + GA4 + PostHog | Hero.tsx, Section3.tsx |
+| `start_focusing_click` | The Nav CTA ("Start focusing") is clicked, linking straight to `/` | `button_location` (`nav`) | GA4 + PostHog | Nav.tsx |
 | `section_view` | A landing-page section scrolls into view (fires once per session) | `section_name` (`hero`\|`features`\|`workspace_images`\|`cta`) | GA4 | SectionTracker.tsx |
 
 ## Experimental routes
