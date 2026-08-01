@@ -2,6 +2,15 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.8] - 2026-08-01
+
+### Changed
+- The speaker icon now actually looks muted when sound is off, instead of just dimming — it swaps to a crossed-out speaker glyph, matching in both the home screen's "Sound" pill and the Sound popup's mute button.
+- The Sound popup's mute button is bigger and easier to aim for: a larger click target, a soft background highlight on hover or keyboard focus, and a slightly larger icon.
+
+### For contributors
+- Extracted the speaker glyph into a shared `SpeakerIcon` component (`components/timer/SpeakerIcon.tsx`) used by both the pill and the popup, so the muted/unmuted artwork only lives in one place.
+
 ## [0.0.1.7] - 2026-07-31
 
 ### Changed

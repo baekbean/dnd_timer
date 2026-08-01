@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { useTimerStore, hasSavedState, type Phase } from '@/lib/timer/store'
 import {
@@ -23,6 +22,7 @@ import { formatTime, getDigitScale } from '@/lib/timer/formatTime'
 import SceneBackground from '@/components/timer/SceneBackground'
 import type { YoutubeControls } from '@/components/timer/YoutubeLayer'
 import SoundPanel from '@/components/timer/SoundPanel'
+import SpeakerIcon from '@/components/timer/SpeakerIcon'
 import SettingsPanel from '@/components/timer/SettingsPanel'
 import ScenePicker from '@/components/timer/ScenePicker'
 import CompleteOverlay from '@/components/timer/CompleteOverlay'
@@ -700,7 +700,7 @@ export default function TimerApp() {
             opacity: soundOn ? 1 : 0.55,
           }}
         >
-          <Image src="/images/speaker-icon.svg" alt="" width={14} height={12} />
+          <SpeakerIcon muted={!soundOn} color="#EBEBF5" className="opacity-60" />
           <span className="text-[13px] leading-none text-[#f5f5f5]">
             {soundOn ? 'Sound' : 'Muted'}
           </span>

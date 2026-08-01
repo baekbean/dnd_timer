@@ -9,6 +9,7 @@ import {
   trackCustomSceneSoundSource,
   trackAmbientPresetChange,
 } from '@/lib/ga'
+import { WAVE_ARC_PATH, X_MARK_PATH } from './helpers/speakerIconPaths'
 
 vi.mock('@/lib/ga', () => ({
   trackSoundToggle: vi.fn(),
@@ -58,11 +59,20 @@ describe('SoundPanel', () => {
     renderPanel({ scene: builtInScene, onClose })
 
     const muteButton = screen.getByRole('button', { name: 'Mute' })
+    // Unmuted glyph: the volume-2 wave-arc path is present, the volume-x
+    // X-mark path is not.
+    expect(muteButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeTruthy()
+    expect(muteButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeNull()
+
     click(muteButton)
 
     expect(useTimerStore.getState().soundOn).toBe(false)
     expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false })
-    expect(screen.getByRole('button', { name: 'Unmute' })).toBeTruthy()
+    const unmuteButton = screen.getByRole('button', { name: 'Unmute' })
+    expect(unmuteButton).toBeTruthy()
+    // Muted glyph: swaps to the volume-x X-mark path, wave-arc path gone.
+    expect(unmuteButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeTruthy()
+    expect(unmuteButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeNull()
   })
 
   it('disables the volume slider while muted', () => {
