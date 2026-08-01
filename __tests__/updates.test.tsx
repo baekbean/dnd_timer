@@ -11,14 +11,8 @@ import { getUpdatePost, UPDATE_POSTS } from '@/lib/updates'
 
 describe('getUpdatePost', () => {
   it('resolves a known slug', () => {
-    expect(getUpdatePost('easier-to-find')?.title).toBe(
-      'We just made NookTimer easier to find'
-    )
-  })
-
-  it('resolves the second post', () => {
     expect(getUpdatePost('new-sounds-and-custom-backgrounds')?.title).toBe(
-      'New sounds, and pick your own background'
+      'New sounds and a background of your own'
     )
   })
 

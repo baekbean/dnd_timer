@@ -3,9 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { track } from '@vercel/analytics'
-import { GOOGLE_FORM_BASE_URL } from '@/lib/constants'
-import { trackWaitlistClick } from '@/lib/ga'
+import { trackStartFocusingClick } from '@/lib/ga'
 import posthog from 'posthog-js'
 
 type Props = {
@@ -33,9 +31,9 @@ export default function Nav({ overLightBackground = false }: Props = {}) {
     >
       <div className="mx-auto max-w-[1280px] flex items-center justify-between px-4 md:px-10 py-5">
         <Image
-          src="/images/logo-dark.png"
-          alt="Do not Disturb Timer"
-          width={169}
+          src="/images/logo-wordmark.png"
+          alt="NookTimer"
+          width={87}
           height={17}
           priority
           style={{ filter: scrolled ? 'none' : 'brightness(0) invert(1)' }}
@@ -49,19 +47,16 @@ export default function Nav({ overLightBackground = false }: Props = {}) {
           >
             Updates
           </Link>
-          <a
-            href={GOOGLE_FORM_BASE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/"
             onClick={() => {
-              track('join_waitlist', { location: 'nav' })
-              trackWaitlistClick({ button_location: 'nav', button_text: 'Join waitlist' })
-              posthog.capture('waitlist_click', { button_location: 'nav', button_text: 'Join waitlist' })
+              trackStartFocusingClick({ button_location: 'nav' })
+              posthog.capture('start_focusing_click', { button_location: 'nav' })
             }}
             className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[22px] py-[14px] rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
           >
-            Join waitlist
-          </a>
+            Start focusing
+          </Link>
         </div>
       </div>
     </header>
