@@ -5,6 +5,7 @@ import TimerApp from '@/components/timer/TimerApp'
 import { useTimerStore } from '@/lib/timer/store'
 import { CUSTOM_SCENE_ID, DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
 import { trackCustomSceneError, trackCustomSceneUnmuteBlocked } from '@/lib/ga'
+import { WAVE_ARC_PATH, X_MARK_PATH } from './helpers/speakerIconPaths'
 
 vi.mock('@/lib/ga', () => ({
   trackTimerStart: vi.fn(),
@@ -16,6 +17,12 @@ vi.mock('@/lib/ga', () => ({
   trackCustomSceneError: vi.fn(),
   trackCustomSceneUnmuteBlocked: vi.fn(),
   trackDesktopOnboardingView: vi.fn(),
+  // SoundPanel renders live (unmocked) in this file's tests, so its own
+  // ga imports need stubs too — otherwise clicking its mute button throws
+  // ("No export defined on the mock") instead of updating the store.
+  trackSoundToggle: vi.fn(),
+  trackCustomSceneSoundSource: vi.fn(),
+  trackAmbientPresetChange: vi.fn(),
 }))
 
 vi.mock('posthog-js', () => ({ default: { capture: vi.fn() } }))
@@ -67,6 +74,27 @@ describe('TimerApp — Sound panel + custom-scene handlers', () => {
     })
   })
 
+  it('swaps the pill icon to the muted glyph when sound is off', () => {
+    // reset() (in beforeEach) doesn't touch soundOn — set it explicitly so
+    // this test's outcome doesn't depend on execution order relative to
+    // other tests in this file that flip it.
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    const soundButton = screen.getByRole('button', { name: 'Sound settings' })
+    expect(screen.getByText('Sound')).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeNull()
+
+    act(() => {
+      useTimerStore.setState({ soundOn: false })
+    })
+
+    expect(screen.getByText('Muted')).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeNull()
+  })
+
   it('opens the Sound panel from the pill and closes it from the panel itself', () => {
     renderTimerApp()
 
@@ -81,6 +109,29 @@ describe('TimerApp — Sound panel + custom-scene handlers', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close sound settings' }))
     expect(soundButton.getAttribute('aria-expanded')).toBe('false')
     expect(screen.queryByRole('dialog', { name: 'Sound' })).toBeNull()
+  })
+
+  it('reflects a mute toggled from inside the popup back onto the pill icon and label', () => {
+    // reset() (called in beforeEach) only clears session/timer fields, not
+    // soundOn — set it explicitly so this test doesn't depend on ordering
+    // relative to other tests that flip it (see the pill-icon-swap test above).
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    const soundButton = screen.getByRole('button', { name: 'Sound settings' })
+    fireEvent.click(soundButton)
+    expect(screen.getByRole('dialog', { name: 'Sound' })).toBeTruthy()
+
+    const muteButton = screen.getByRole('button', { name: 'Mute' })
+    // Reshaped's Popover only registers a click as "inside" after a preceding
+    // mousedown on the same element (see SoundPanel.test.tsx's `click` helper).
+    fireEvent.mouseDown(muteButton)
+    fireEvent.click(muteButton)
+
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(screen.getByText('Muted')).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeTruthy()
+    expect(soundButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeNull()
   })
 
   it('falls back to the default scene and reopens the editor with an error when the embed errors', () => {
