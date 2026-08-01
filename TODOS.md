@@ -1,5 +1,19 @@
 # TODOS
 
+## Testing
+
+### Fix order-dependent flake in TimerAppSoundScene.test.tsx
+
+**What:** `it('ducks the video under the chime on a natural completion for the custom video scene')` in `__tests__/TimerAppSoundScene.test.tsx` fails under randomized test order (`npx vitest run __tests__/TimerAppSoundScene.test.tsx --sequence.shuffle --sequence.seed=3`) — `mockControls.duck` is never called when this test runs after certain others in the file.
+
+**Why:** A test whose pass/fail depends on execution order is a hidden trust gap — it can start failing in CI (or after adding/reordering tests) with no code change to blame.
+
+**Context:** Found by the testing specialist during `/ship`'s pre-landing review on 2026-08-01, while adding new tests to this same file for the mute-icon feature. Reproduced identically on the pre-existing (unmodified) version of the file, so this is not something the mute-icon branch introduced — likely shared mutable state (the Zustand store, or the `mockControls`/`completions` fields) leaking between tests without a full reset. Default (non-shuffled) `npm test` order passes cleanly; only surfaces under `--sequence.shuffle`.
+
+**Effort:** S
+**Priority:** P3
+**Depends on:** None
+
 ## Timer app
 
 ### Fix stale getScene() in the experimental /timer-test2 route
