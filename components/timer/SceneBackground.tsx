@@ -14,6 +14,7 @@ interface Props {
   soundOn?: boolean
   volume?: number
   onYoutubeError?: (code: number) => void
+  onYoutubeReady?: () => void
   onYoutubeAudioBlockedChange?: (blocked: boolean) => void
   youtubeControlsRef?: RefObject<YoutubeControls | null>
 }
@@ -23,6 +24,7 @@ export default function SceneBackground({
   soundOn = false,
   volume = 0,
   onYoutubeError,
+  onYoutubeReady,
   onYoutubeAudioBlockedChange,
   youtubeControlsRef,
 }: Props) {
@@ -144,6 +146,7 @@ export default function SceneBackground({
             soundOn={soundOn}
             volume={volume}
             onError={onYoutubeError ?? (() => {})}
+            onReady={onYoutubeReady}
             onAudioBlockedChange={onYoutubeAudioBlockedChange ?? (() => {})}
             controlsRef={youtubeControlsRef}
           />

@@ -4,7 +4,13 @@ import { Reshaped } from 'reshaped'
 import TimerApp from '@/components/timer/TimerApp'
 import { useTimerStore } from '@/lib/timer/store'
 import { CUSTOM_SCENE_ID, DEFAULT_SCENE_ID } from '@/lib/timer/scenes'
-import { trackCustomSceneError, trackCustomSceneUnmuteBlocked } from '@/lib/ga'
+import {
+  trackCustomSceneError,
+  trackCustomSceneReady,
+  trackCustomSceneUnmuteBlocked,
+  trackSessionAbandon,
+} from '@/lib/ga'
+import posthog from 'posthog-js'
 import { WAVE_ARC_PATH, X_MARK_PATH } from './helpers/speakerIconPaths'
 
 vi.mock('@/lib/ga', () => ({
@@ -15,6 +21,7 @@ vi.mock('@/lib/ga', () => ({
   trackFocusExtend: vi.fn(),
   trackSceneExposure: vi.fn(),
   trackCustomSceneError: vi.fn(),
+  trackCustomSceneReady: vi.fn(),
   trackCustomSceneUnmuteBlocked: vi.fn(),
   trackDesktopOnboardingView: vi.fn(),
   // SoundPanel renders live (unmocked) in this file's tests, so its own
@@ -35,6 +42,7 @@ const mockControls = { retryUnmute: vi.fn(), duck: vi.fn() }
 vi.mock('@/components/timer/SceneBackground', () => ({
   default: (props: {
     onYoutubeError?: (code: number) => void
+    onYoutubeReady?: () => void
     onYoutubeAudioBlockedChange?: (blocked: boolean) => void
     youtubeControlsRef?: { current: unknown }
   }) => {
@@ -43,6 +51,9 @@ vi.mock('@/components/timer/SceneBackground', () => ({
       <div>
         <button type="button" onClick={() => props.onYoutubeError?.(101)}>
           fire-youtube-error
+        </button>
+        <button type="button" onClick={() => props.onYoutubeReady?.()}>
+          fire-youtube-ready
         </button>
         <button type="button" onClick={() => props.onYoutubeAudioBlockedChange?.(true)}>
           fire-audio-blocked
@@ -143,6 +154,35 @@ describe('TimerApp — Sound panel + custom-scene handlers', () => {
     expect(trackCustomSceneError).toHaveBeenCalledWith({ code: 101 })
     expect(useTimerStore.getState().sceneId).toBe(DEFAULT_SCENE_ID)
     expect(screen.getByRole('alert').textContent).toMatch(/can't be played here/)
+  })
+
+  it('tracks custom_scene_ready with the active video_id when the embed loads', () => {
+    useTimerStore.setState({ sceneId: CUSTOM_SCENE_ID, customYoutubeId: 'abcdefghijk' })
+    renderTimerApp()
+
+    fireEvent.click(screen.getByText('fire-youtube-ready'))
+
+    expect(trackCustomSceneReady).toHaveBeenCalledWith({ video_id: 'abcdefghijk' })
+    expect(posthog.capture).toHaveBeenCalledWith('custom_scene_ready', { video_id: 'abcdefghijk' })
+  })
+
+  it('includes scene_id when a mid-focus reset fires session_abandon', () => {
+    useTimerStore.setState({ sceneId: DEFAULT_SCENE_ID })
+    renderTimerApp()
+
+    act(() => {
+      useTimerStore.getState().start()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(trackSessionAbandon).toHaveBeenCalledWith(
+      expect.objectContaining({ via: 'reset', scene_id: DEFAULT_SCENE_ID })
+    )
+    expect(posthog.capture).toHaveBeenCalledWith(
+      'session_abandon',
+      expect.objectContaining({ via: 'reset', scene_id: DEFAULT_SCENE_ID })
+    )
   })
 
   it('tracks the unmute-blocked event once and shows a retry button that calls back into the player', () => {
