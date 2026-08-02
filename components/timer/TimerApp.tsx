@@ -694,6 +694,7 @@ export default function TimerApp() {
             scene={scene}
             triggerRef={soundButtonRef}
             containerRef={containerRef}
+            isFullscreen={isFullscreen}
             onClose={() => setSoundPanelOpen(false)}
           />
         )}

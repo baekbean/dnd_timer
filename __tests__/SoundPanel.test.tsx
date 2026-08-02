@@ -172,4 +172,17 @@ describe('SoundPanel', () => {
     expect(useTimerStore.getState().volume).toBeCloseTo(0.4)
     expect(useTimerStore.getState().videoVolume).toBe(0.6)
   })
+
+  // Reshaped's Popover doesn't re-parent into containerRef (only Modal/Overlay
+  // does), so a Popover portaled to document.body falls outside the fullscreen
+  // top layer and becomes invisible — see SoundPanel.tsx's isFullscreen branch.
+  it('renders as a centered dialog instead of a bottom-anchored popover while fullscreen', () => {
+    renderPanel({ scene: builtInScene, isFullscreen: true, onClose: vi.fn() })
+
+    // Reshaped's Modal renders its own top-level aria-modal dialog landmark —
+    // the popover variant never produces one, it only sets role="dialog" on
+    // the plain content wrapper (see SoundPanel.tsx's `card`).
+    const dialog = screen.getByRole('dialog', { name: 'Sound' })
+    expect(dialog.getAttribute('aria-modal')).toBe('true')
+  })
 })
