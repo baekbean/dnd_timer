@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Modal, Popover } from 'reshaped'
 import { parseYoutubeVideoId } from '@/lib/timer/youtube'
+import { useKeyboardInset } from '@/lib/timer/useKeyboardInset'
 
 export const INVALID_URL_MESSAGE = "That doesn't look like a YouTube link."
 
@@ -27,6 +28,10 @@ interface Props {
    * Modal autoFocus) while genuinely fullscreen. The person taps the field
    * manually instead of losing fullscreen the moment the editor opens. */
   isFullscreen?: boolean
+  /** True on any touch device (phone or tablet) — the on-screen keyboard can
+   * cover the card, so the dialog variant becomes a bottom sheet whose offset
+   * tracks the keyboard's height instead of sitting statically centered. */
+  hasSoftKeyboard?: boolean
   onSubmit: (videoId: string) => void
   onResetToDefault: () => void
   onInvalid: () => void
@@ -41,6 +46,7 @@ export default function CustomScenePopover({
   triggerRef,
   containerRef,
   isFullscreen = false,
+  hasSoftKeyboard = false,
   onSubmit,
   onResetToDefault,
   onInvalid,
@@ -49,6 +55,33 @@ export default function CustomScenePopover({
   const [value, setValue] = useState(`https://youtu.be/${videoId}`)
   const [error, setError] = useState<string | null>(initialError)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const modalRootRef = useRef<HTMLDivElement | null>(null)
+  const keyboardInset = useKeyboardInset(hasSoftKeyboard)
+
+  // Reshaped's Modal discards any `attributes.style` we'd pass in, but never
+  // touches the physical `bottom` offset itself (only `transform`, for its
+  // own drag-to-dismiss gesture), so writing it imperatively via the ref is
+  // the one safe way to keep the sheet's bottom edge above the keyboard.
+  // Modal's own root node only mounts once its internal `rendered`/`mounted`
+  // state settles — that happens a commit or two after this component's own
+  // effects already ran (true in real browsers too, not just this test
+  // environment: Reshaped gates it behind a CSS-transition-end callback), so
+  // `modalRootRef.current` isn't guaranteed to exist yet the first time this
+  // effect runs. Poll one animation frame at a time until it does.
+  useEffect(() => {
+    if (!hasSoftKeyboard) return
+    let frame: number
+    const apply = () => {
+      const el = modalRootRef.current
+      if (el) {
+        el.style.setProperty('bottom', `${keyboardInset}px`)
+        return
+      }
+      frame = requestAnimationFrame(apply)
+    }
+    apply()
+    return () => cancelAnimationFrame(frame)
+  }, [hasSoftKeyboard, keyboardInset])
 
   // Not `autoFocus`: React's autoFocus calls the native focus() without
   // `preventScroll`, which hits the same smooth-scroll-to-bottom bug as the
@@ -180,6 +213,8 @@ export default function CustomScenePopover({
         ariaLabel="Background video"
         containerRef={containerRef}
         autoFocus={!isFullscreen}
+        position={hasSoftKeyboard ? 'bottom' : 'center'}
+        attributes={{ ref: modalRootRef }}
       >
         {card}
       </Modal>
