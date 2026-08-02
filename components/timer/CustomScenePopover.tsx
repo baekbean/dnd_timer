@@ -54,9 +54,17 @@ export default function CustomScenePopover({
 }: Props) {
   const [value, setValue] = useState(`https://youtu.be/${videoId}`)
   const [error, setError] = useState<string | null>(initialError)
+  const [clipboardPasteSupported, setClipboardPasteSupported] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const modalRootRef = useRef<HTMLDivElement | null>(null)
   const keyboardInset = useKeyboardInset(hasSoftKeyboard)
+
+  // navigator isn't available server-side, so this has to resolve on mount —
+  // matches the same hydration-safe pattern as isFullscreen support detection.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-guard: detects clipboard-read support after hydration; server always starts false; one extra render is intentional
+    setClipboardPasteSupported(typeof navigator.clipboard?.readText === 'function')
+  }, [])
 
   // Reshaped's Modal discards any `attributes.style` we'd pass in, but never
   // touches the physical `bottom` offset itself (only `transform`, for its
@@ -115,6 +123,24 @@ export default function CustomScenePopover({
     onSubmit(parsed)
   }
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      const parsed = parseYoutubeVideoId(text)
+      if (!parsed) {
+        setError(INVALID_URL_MESSAGE)
+        onInvalid()
+        inputRef.current?.focus({ preventScroll: true })
+        return
+      }
+      setValue(`https://youtu.be/${parsed}`)
+      setError(null)
+    } catch {
+      // Permission denied, unsupported, or the person dismissed Safari's
+      // native paste-confirmation popup — nothing to surface here.
+    }
+  }
+
   // Box styling (background/radius/shadow/padding) comes from the Popover or
   // Modal wrapper below — this is just the content.
   const card = (
@@ -165,6 +191,25 @@ export default function CustomScenePopover({
           aria-invalid={error ? true : undefined}
           className="min-w-0 flex-1 rounded-lg border border-[#343434]/15 bg-[#F6F6F3] px-3 py-2 font-pretendard text-[14px] text-[#343434] outline-none focus:border-[#343434]/40"
         />
+        {clipboardPasteSupported && (
+          <button
+            type="button"
+            aria-label="Paste from clipboard"
+            onClick={handlePaste}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#343434]/8 text-[#343434] transition-opacity hover:opacity-80"
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path
+                d="M4.5 2.5h-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <rect x="4.5" y="1.5" width="5" height="2" rx="0.6" stroke="currentColor" strokeWidth="1.3" />
+            </svg>
+          </button>
+        )}
         <button
           type="submit"
           aria-label="Apply background video"
