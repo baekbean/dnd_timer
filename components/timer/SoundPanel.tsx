@@ -1,6 +1,6 @@
 'use client'
 
-import { Popover, Slider, ToggleButton, ToggleButtonGroup } from 'reshaped'
+import { Modal, Popover, Slider, ToggleButton, ToggleButtonGroup } from 'reshaped'
 import type { Scene } from '@/lib/timer/scenes'
 import { useTimerStore, type SoundSource } from '@/lib/timer/store'
 import SpeakerIcon from '@/components/timer/SpeakerIcon'
@@ -73,10 +73,25 @@ interface Props {
   scene: Scene
   /** Element the popover is anchored to — the "Sound" pill in TimerApp. */
   triggerRef?: React.RefObject<HTMLElement | null>
+  /** Timer's fullscreen container — keeps the popover/modal inside it instead
+   * of portaling to document.body, which would render outside (and so be
+   * invisible/unreachable) while the timer is fullscreen. */
+  containerRef?: React.RefObject<HTMLElement | null>
+  /** Reshaped's Popover doesn't re-parent into containerRef (only Modal/Overlay
+   * does), so a Popover portaled to document.body falls outside the fullscreen
+   * top layer and becomes invisible. Render as a centered Modal instead while
+   * fullscreen, same fix as ScenePicker's background-video editor. */
+  isFullscreen?: boolean
   onClose: () => void
 }
 
-export default function SoundPanel({ scene, triggerRef, onClose }: Props) {
+export default function SoundPanel({
+  scene,
+  triggerRef,
+  containerRef,
+  isFullscreen = false,
+  onClose,
+}: Props) {
   const soundOn = useTimerStore((s) => s.soundOn)
   const setSoundOn = useTimerStore((s) => s.setSoundOn)
   const customSoundSource = useTimerStore((s) => s.customSoundSource)
@@ -100,6 +115,101 @@ export default function SoundPanel({ scene, triggerRef, onClose }: Props) {
   const setActiveVolume = showVideoControls ? setVideoVolume : setVolume
   const activeVolumeName = showVideoControls ? 'video-volume' : 'ambient-volume'
 
+  // Box styling (background/radius/shadow/padding) comes from the Popover or
+  // Modal wrapper below — this is just the content. The Modal variant is
+  // already its own labeled dialog — a nested role="dialog" here would be a
+  // redundant/confusing landmark for AT.
+  const card = (
+    <div role={isFullscreen ? undefined : 'dialog'} aria-label={isFullscreen ? undefined : 'Sound'}>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="font-aspekta text-[18px] uppercase text-[#343434]">Sound</h2>
+        <button
+          type="button"
+          aria-label="Close sound settings"
+          onClick={onClose}
+          className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[#343434]/5"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M2 2L12 12M12 2L2 12" stroke="#343434" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <span className="font-pretendard text-[15px] text-[#343434]">Volume</span>
+        <MasterVolumeControl
+          soundOn={soundOn}
+          onToggleSoundOn={(checked) => {
+            trackSoundToggle({ sound_on: checked })
+            posthog.capture('sound_change', { sound_on: checked })
+            setSoundOn(checked)
+          }}
+          name={activeVolumeName}
+          value={activeVolume}
+          onChangeValue={setActiveVolume}
+        />
+
+        <div className="flex flex-col gap-4">
+          <span className="font-pretendard text-[15px] text-[#343434]">Sound type</span>
+
+          {showSourcePicker && (
+            <ToggleButtonGroup
+              value={[customSoundSource]}
+              onChange={({ value }) => {
+                const source = value[0] as SoundSource | undefined
+                if (!source) return
+                setCustomSoundSource(source)
+                trackCustomSceneSoundSource({ source })
+                posthog.capture('custom_scene_sound_source', { source })
+              }}
+              color="neutral"
+              selectedColor="primary"
+              className="w-full"
+            >
+              <ToggleButton value="app" variant="solid" fullWidth>
+                {SOURCE_LABELS.app}
+              </ToggleButton>
+              <ToggleButton value="video" variant="solid" fullWidth>
+                {SOURCE_LABELS.video}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          )}
+
+          {showAmbientControls && (
+            <div className="grid grid-cols-2 gap-1.5">
+              {AMBIENT_PRESET_IDS.map((preset) => (
+                <ToggleButton
+                  key={preset}
+                  value={preset}
+                  checked={ambientPresetId === preset}
+                  onChange={({ checked }) => {
+                    if (!checked) return
+                    setAmbientPresetId(preset)
+                    trackAmbientPresetChange({ preset })
+                    posthog.capture('ambient_preset_change', { preset })
+                  }}
+                  color="neutral"
+                  selectedColor="primary"
+                  variant="solid"
+                >
+                  {PRESET_LABELS[preset]}
+                </ToggleButton>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  if (isFullscreen) {
+    return (
+      <Modal active onClose={onClose} ariaLabel="Sound" containerRef={containerRef}>
+        {card}
+      </Modal>
+    )
+  }
+
   return (
     <Popover
       active
@@ -107,89 +217,9 @@ export default function SoundPanel({ scene, triggerRef, onClose }: Props) {
       positionRef={triggerRef}
       position="bottom-start"
       width="min(320px, calc(100vw - 32px))"
+      containerRef={containerRef}
     >
-      <Popover.Content>
-        <div role="dialog" aria-label="Sound">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-aspekta text-[18px] uppercase text-[#343434]">Sound</h2>
-            <button
-              type="button"
-              aria-label="Close sound settings"
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[#343434]/5"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2 2L12 12M12 2L2 12" stroke="#343434" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <span className="font-pretendard text-[15px] text-[#343434]">Volume</span>
-            <MasterVolumeControl
-              soundOn={soundOn}
-              onToggleSoundOn={(checked) => {
-                trackSoundToggle({ sound_on: checked })
-                posthog.capture('sound_change', { sound_on: checked })
-                setSoundOn(checked)
-              }}
-              name={activeVolumeName}
-              value={activeVolume}
-              onChangeValue={setActiveVolume}
-            />
-
-            <div className="flex flex-col gap-4">
-              <span className="font-pretendard text-[15px] text-[#343434]">Sound type</span>
-
-              {showSourcePicker && (
-                <ToggleButtonGroup
-                  value={[customSoundSource]}
-                  onChange={({ value }) => {
-                    const source = value[0] as SoundSource | undefined
-                    if (!source) return
-                    setCustomSoundSource(source)
-                    trackCustomSceneSoundSource({ source })
-                    posthog.capture('custom_scene_sound_source', { source })
-                  }}
-                  color="neutral"
-                  selectedColor="primary"
-                  className="w-full"
-                >
-                  <ToggleButton value="app" variant="solid" fullWidth>
-                    {SOURCE_LABELS.app}
-                  </ToggleButton>
-                  <ToggleButton value="video" variant="solid" fullWidth>
-                    {SOURCE_LABELS.video}
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              )}
-
-              {showAmbientControls && (
-                <div className="grid grid-cols-2 gap-1.5">
-                  {AMBIENT_PRESET_IDS.map((preset) => (
-                    <ToggleButton
-                      key={preset}
-                      value={preset}
-                      checked={ambientPresetId === preset}
-                      onChange={({ checked }) => {
-                        if (!checked) return
-                        setAmbientPresetId(preset)
-                        trackAmbientPresetChange({ preset })
-                        posthog.capture('ambient_preset_change', { preset })
-                      }}
-                      color="neutral"
-                      selectedColor="primary"
-                      variant="solid"
-                    >
-                      {PRESET_LABELS[preset]}
-                    </ToggleButton>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </Popover.Content>
+      <Popover.Content>{card}</Popover.Content>
     </Popover>
   )
 }

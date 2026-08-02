@@ -690,7 +690,13 @@ export default function TimerApp() {
         </button>
 
         {soundPanelOpen && (
-          <SoundPanel scene={scene} triggerRef={soundButtonRef} onClose={() => setSoundPanelOpen(false)} />
+          <SoundPanel
+            scene={scene}
+            triggerRef={soundButtonRef}
+            containerRef={containerRef}
+            isFullscreen={isFullscreen}
+            onClose={() => setSoundPanelOpen(false)}
+          />
         )}
 
         {/* The parent page's gesture doesn't always reach a cross-origin
@@ -843,6 +849,8 @@ export default function TimerApp() {
             setSceneEditorOpen(open)
             if (!open) setSceneEditorError(null)
           }}
+          containerRef={containerRef}
+          isFullscreen={isFullscreen}
         />
       </div>
 
@@ -853,7 +861,9 @@ export default function TimerApp() {
         />
       )}
 
-      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsPanel onClose={() => setSettingsOpen(false)} containerRef={containerRef} />
+      )}
       {justCompletedFocus && (
         <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
       )}

@@ -36,12 +36,22 @@ interface Props {
   /** Surfaced when the player rejected the video, so the person can fix it here. */
   editorError?: string | null
   onEditorOpenChange?: (open: boolean) => void
+  /** Timer's fullscreen container — passed through to CustomScenePopover so it
+   * stays reachable while the timer is fullscreen. */
+  containerRef?: React.RefObject<HTMLElement | null>
+  /** Reshaped's Popover doesn't re-parent into containerRef (only Modal/Overlay
+   * does), so a Popover portaled to document.body falls outside the fullscreen
+   * top layer and becomes invisible. Force the dialog variant instead while
+   * fullscreen, same as the mobile/landscape case below. */
+  isFullscreen?: boolean
 }
 
 export default function ScenePicker({
   editorOpen,
   editorError = null,
   onEditorOpenChange,
+  containerRef,
+  isFullscreen = false,
 }: Props = {}) {
   const sceneId = useTimerStore((s) => s.sceneId)
   const setScene = useTimerStore((s) => s.setScene)
@@ -61,8 +71,10 @@ export default function ScenePicker({
   const deviceType = useDeviceType()
   const isLandscape = useLandscape()
   // A bottom-anchored popover lands right under the on-screen keyboard on
-  // phones, and there's no vertical room for it in landscape either.
-  const variant = deviceType === 'mobile' || isLandscape ? 'dialog' : 'popover'
+  // phones, and there's no vertical room for it in landscape either. Fullscreen
+  // forces it too, since only the dialog variant stays visible there (see the
+  // isFullscreen prop doc above).
+  const variant = deviceType === 'mobile' || isLandscape || isFullscreen ? 'dialog' : 'popover'
 
   const customActive = sceneId === CUSTOM_SCENE_ID
 
@@ -178,6 +190,7 @@ export default function ScenePicker({
           initialError={editorError}
           variant={variant}
           triggerRef={editButtonRef}
+          containerRef={containerRef}
           onSubmit={applyVideo}
           onResetToDefault={() => applyVideo(DEFAULT_CUSTOM_YOUTUBE_ID)}
           onInvalid={() => {
