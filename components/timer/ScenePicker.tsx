@@ -191,6 +191,7 @@ export default function ScenePicker({
           variant={variant}
           triggerRef={editButtonRef}
           containerRef={containerRef}
+          isFullscreen={isFullscreen}
           onSubmit={applyVideo}
           onResetToDefault={() => applyVideo(DEFAULT_CUSTOM_YOUTUBE_ID)}
           onInvalid={() => {

@@ -65,4 +65,18 @@ describe('ScenePicker while the timer is fullscreen', () => {
     const dialog = screen.getByRole('dialog', { name: 'Background video' })
     expect(dialog.getAttribute('aria-modal')).not.toBe('true')
   })
+
+  // iPadOS Safari exits fullscreen the instant a text input inside it
+  // receives focus ("bounces out" — see WebKit bug 212934 discussion), so
+  // autofocusing the URL input the moment the editor opens would immediately
+  // kick the person back out of fullscreen. Contrast with
+  // ScenePicker.test.tsx's "focuses the URL input as soon as it mounts",
+  // which covers the same editor when not fullscreen.
+  it('does not autofocus the URL input, so it cannot bounce iPadOS out of fullscreen', () => {
+    renderPicker(true)
+
+    click(screen.getByRole('button', { name: 'Change background video' }))
+
+    expect(screen.getByLabelText('YouTube link')).not.toBe(document.activeElement)
+  })
 })
