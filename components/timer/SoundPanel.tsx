@@ -73,10 +73,14 @@ interface Props {
   scene: Scene
   /** Element the popover is anchored to — the "Sound" pill in TimerApp. */
   triggerRef?: React.RefObject<HTMLElement | null>
+  /** Timer's fullscreen container — keeps the popover inside it instead of
+   * portaling to document.body, which would render outside (and so be
+   * invisible/unreachable) while the timer is fullscreen. */
+  containerRef?: React.RefObject<HTMLElement | null>
   onClose: () => void
 }
 
-export default function SoundPanel({ scene, triggerRef, onClose }: Props) {
+export default function SoundPanel({ scene, triggerRef, containerRef, onClose }: Props) {
   const soundOn = useTimerStore((s) => s.soundOn)
   const setSoundOn = useTimerStore((s) => s.setSoundOn)
   const customSoundSource = useTimerStore((s) => s.customSoundSource)
@@ -107,6 +111,7 @@ export default function SoundPanel({ scene, triggerRef, onClose }: Props) {
       positionRef={triggerRef}
       position="bottom-start"
       width="min(320px, calc(100vw - 32px))"
+      containerRef={containerRef}
     >
       <Popover.Content>
         <div role="dialog" aria-label="Sound">

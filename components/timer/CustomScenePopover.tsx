@@ -17,6 +17,10 @@ interface Props {
   variant: 'popover' | 'dialog'
   /** Element the popover is anchored to — unused for the dialog variant. */
   triggerRef?: React.RefObject<HTMLElement | null>
+  /** Timer's fullscreen container — keeps the popover/modal inside it instead
+   * of portaling to document.body, which would render outside (and so be
+   * invisible/unreachable) while the timer is fullscreen. */
+  containerRef?: React.RefObject<HTMLElement | null>
   onSubmit: (videoId: string) => void
   onResetToDefault: () => void
   onInvalid: () => void
@@ -29,6 +33,7 @@ export default function CustomScenePopover({
   initialError = null,
   variant,
   triggerRef,
+  containerRef,
   onSubmit,
   onResetToDefault,
   onInvalid,
@@ -162,7 +167,7 @@ export default function CustomScenePopover({
 
   if (variant === 'dialog') {
     return (
-      <Modal active onClose={onClose} ariaLabel="Background video">
+      <Modal active onClose={onClose} ariaLabel="Background video" containerRef={containerRef}>
         {card}
       </Modal>
     )
@@ -175,6 +180,7 @@ export default function CustomScenePopover({
       positionRef={triggerRef}
       position="top"
       width="min(320px, calc(100vw - 32px))"
+      containerRef={containerRef}
     >
       <Popover.Content>{card}</Popover.Content>
     </Popover>
