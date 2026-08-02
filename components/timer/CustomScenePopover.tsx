@@ -21,6 +21,12 @@ interface Props {
    * of portaling to document.body, which would render outside (and so be
    * invisible/unreachable) while the timer is fullscreen. */
   containerRef?: React.RefObject<HTMLElement | null>
+  /** iPadOS Safari exits fullscreen the instant a text input inside it
+   * receives focus ("bounces out" — see WebKit bug 212934 discussion), so
+   * this skips the URL input's autofocus (both ours and Reshaped's own
+   * Modal autoFocus) while genuinely fullscreen. The person taps the field
+   * manually instead of losing fullscreen the moment the editor opens. */
+  isFullscreen?: boolean
   onSubmit: (videoId: string) => void
   onResetToDefault: () => void
   onInvalid: () => void
@@ -34,6 +40,7 @@ export default function CustomScenePopover({
   variant,
   triggerRef,
   containerRef,
+  isFullscreen = false,
   onSubmit,
   onResetToDefault,
   onInvalid,
@@ -53,7 +60,7 @@ export default function CustomScenePopover({
   // exactly when the input node itself is inserted, whenever that is.
   const setInputRef = (el: HTMLInputElement | null) => {
     inputRef.current = el
-    if (el && document.activeElement !== el) {
+    if (el && document.activeElement !== el && !isFullscreen) {
       el.focus({ preventScroll: true })
     }
   }
@@ -167,7 +174,13 @@ export default function CustomScenePopover({
 
   if (variant === 'dialog') {
     return (
-      <Modal active onClose={onClose} ariaLabel="Background video" containerRef={containerRef}>
+      <Modal
+        active
+        onClose={onClose}
+        ariaLabel="Background video"
+        containerRef={containerRef}
+        autoFocus={!isFullscreen}
+      >
         {card}
       </Modal>
     )
