@@ -93,6 +93,7 @@ export function trackSessionComplete(params: { completed_phase: TimerPhase; sess
 export function trackSessionAbandon(params: {
   via: 'reset' | 'skip' | 'tab_closed'
   remaining_ms: number
+  scene_id: string
 }) {
   gtagEvent('session_abandon', params)
 }
@@ -139,6 +140,11 @@ export function trackCustomSceneInvalidUrl() {
 /** The player refused the video (2/5 = player error, 100 = gone, 101/150 = embedding disabled). */
 export function trackCustomSceneError(params: { code: number }) {
   gtagEvent('custom_scene_error', params)
+}
+
+/** The embed successfully loaded and started playing. */
+export function trackCustomSceneReady(params: { video_id: string }) {
+  gtagEvent('custom_scene_ready', params)
 }
 
 /** The browser wouldn't unmute the embed — measures how often the iOS fallback is needed. */

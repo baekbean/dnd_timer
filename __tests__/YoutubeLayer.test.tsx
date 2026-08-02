@@ -114,6 +114,25 @@ describe('YoutubeLayer', () => {
     expect(playerInstance.playVideo).toHaveBeenCalled()
   })
 
+  it('calls onReady once the player signals it has loaded', async () => {
+    const onReady = vi.fn()
+    render(
+      <YoutubeLayer
+        videoId={VIDEO_ID}
+        soundOn={false}
+        volume={0.6}
+        onError={vi.fn()}
+        onReady={onReady}
+        onAudioBlockedChange={vi.fn()}
+      />
+    )
+    await flushMicrotasks()
+
+    expect(onReady).not.toHaveBeenCalled()
+    fireReady()
+    expect(onReady).toHaveBeenCalledTimes(1)
+  })
+
   it('mutes and reports not-blocked when soundOn is false', async () => {
     const onAudioBlockedChange = vi.fn()
     render(

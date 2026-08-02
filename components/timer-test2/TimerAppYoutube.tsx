@@ -394,7 +394,7 @@ export default function TimerAppYoutube() {
 
   const abandonIfMidFocus = (via: 'reset' | 'skip') => {
     if (phase === 'focus' && status !== 'idle') {
-      trackSessionAbandon({ via, remaining_ms: remainingMs })
+      trackSessionAbandon({ via, remaining_ms: remainingMs, scene_id: sceneId })
     }
   }
 

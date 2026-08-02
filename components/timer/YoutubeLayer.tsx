@@ -117,6 +117,8 @@ interface Props {
   volume: number
   /** Non-recoverable player errors: 2, 5, 100, 101, 150. */
   onError: (code: number) => void
+  /** The embed successfully loaded and started playing. */
+  onReady?: () => void
   /** True once we know the browser refused to unmute (iOS, mostly). */
   onAudioBlockedChange: (blocked: boolean) => void
   controlsRef?: RefObject<YoutubeControls | null>
@@ -127,6 +129,7 @@ export default function YoutubeLayer({
   soundOn,
   volume,
   onError,
+  onReady,
   onAudioBlockedChange,
   controlsRef,
 }: Props) {
@@ -137,9 +140,9 @@ export default function YoutubeLayer({
 
   // Kept in a ref so an unstable callback identity in the parent can't tear
   // down and rebuild the player or the audio effect on every render.
-  const callbacksRef = useRef({ onError, onAudioBlockedChange })
+  const callbacksRef = useRef({ onError, onReady, onAudioBlockedChange })
   useEffect(() => {
-    callbacksRef.current = { onError, onAudioBlockedChange }
+    callbacksRef.current = { onError, onReady, onAudioBlockedChange }
   })
 
   // duck()'s setTimeout below closes over `volume` at schedule time — if the
@@ -222,6 +225,7 @@ export default function YoutubeLayer({
               if (cancelled) return
               event.target.playVideo()
               setReady(true)
+              callbacksRef.current.onReady?.()
               verifyPlaying(PLAY_FIRST_VERIFY_MS)
             },
             onError: (event) => {

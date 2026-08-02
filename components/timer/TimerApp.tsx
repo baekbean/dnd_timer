@@ -10,6 +10,7 @@ import {
   trackFocusExtend,
   trackSceneExposure,
   trackCustomSceneError,
+  trackCustomSceneReady,
   trackCustomSceneUnmuteBlocked,
 } from '@/lib/ga'
 import posthog from 'posthog-js'
@@ -564,8 +565,8 @@ export default function TimerApp() {
 
   const abandonIfMidFocus = (via: 'reset' | 'skip' | 'tab_closed') => {
     if (phase === 'focus' && status !== 'idle') {
-      trackSessionAbandon({ via, remaining_ms: remainingMs })
-      posthog.capture('session_abandon', { via, remaining_ms: remainingMs })
+      trackSessionAbandon({ via, remaining_ms: remainingMs, scene_id: sceneId })
+      posthog.capture('session_abandon', { via, remaining_ms: remainingMs, scene_id: sceneId })
     }
   }
 
@@ -578,8 +579,12 @@ export default function TimerApp() {
     const handlePageHide = () => {
       const s = useTimerStore.getState()
       if (s.phase === 'focus' && s.status !== 'idle') {
-        trackSessionAbandon({ via: 'tab_closed', remaining_ms: s.remainingMs })
-        posthog.capture('session_abandon', { via: 'tab_closed', remaining_ms: s.remainingMs })
+        trackSessionAbandon({ via: 'tab_closed', remaining_ms: s.remainingMs, scene_id: s.sceneId })
+        posthog.capture('session_abandon', {
+          via: 'tab_closed',
+          remaining_ms: s.remainingMs,
+          scene_id: s.sceneId,
+        })
       }
       const duration_ms = msSinceSceneEntered()
       trackSceneExposure({ scene_id: s.sceneId, duration_ms, ended_reason: 'tab_closed' })
@@ -636,6 +641,11 @@ export default function TimerApp() {
     setSceneEditorOpen(true)
   }
 
+  const handleYoutubeReady = () => {
+    trackCustomSceneReady({ video_id: customYoutubeId })
+    posthog.capture('custom_scene_ready', { video_id: customYoutubeId })
+  }
+
   const audioBlockedTrackedRef = useRef(false)
   const handleYoutubeAudioBlocked = (blocked: boolean) => {
     setYoutubeAudioBlocked(blocked)
@@ -680,6 +690,7 @@ export default function TimerApp() {
         soundOn={youtubeSoundOn}
         volume={videoVolume}
         onYoutubeError={handleYoutubeError}
+        onYoutubeReady={handleYoutubeReady}
         onYoutubeAudioBlockedChange={handleYoutubeAudioBlocked}
         youtubeControlsRef={youtubeControlsRef}
       />

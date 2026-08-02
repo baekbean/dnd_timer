@@ -25,7 +25,7 @@ Three destinations:
 | `timer_start` | A focus/break session starts | `phase`, `scene_id`, `focus_min` | TimerApp.tsx |
 | `focus_extend` | The +N min quick-extend button is used mid-focus | `minutes` | TimerApp.tsx |
 | `focus_complete` / `break_complete` | A phase finishes naturally (event name depends on which) | `completed_phase`, `sessions_today` | TimerApp.tsx |
-| `session_abandon` | A running/paused focus session is cut short | `via` (`reset`\|`skip`\|`tab_closed`), `remaining_ms` | TimerApp.tsx (reset/skip, and the `pagehide` handler for tab close) |
+| `session_abandon` | A running/paused focus session is cut short | `via` (`reset`\|`skip`\|`tab_closed`), `remaining_ms`, `scene_id` | TimerApp.tsx (reset/skip, and the `pagehide` handler for tab close) |
 | `scene_change` | The background scene is switched | `scene_id` | ScenePicker.tsx |
 | `scene_exposure` | The *outgoing* scene's on-screen time is logged, right before switching or on tab close — this is what makes the default scene's usage measurable, since nothing ever "switches to" it | `scene_id`, `duration_ms`, `ended_reason` (`switched`\|`tab_closed`) | ScenePicker.tsx, TimerApp.tsx |
 
@@ -37,6 +37,7 @@ Three destinations:
 | `custom_scene_set` | A link is accepted and becomes the custom background, including resetting back to the shipped default (same call path) | `video_id`, `is_default` | ScenePicker.tsx |
 | `custom_scene_invalid_url` | A pasted link couldn't be parsed | – | ScenePicker.tsx |
 | `custom_scene_error` | The player rejected the video (2/5 = player error, 100 = gone, 101/150 = embedding disabled) | `code` | TimerApp.tsx |
+| `custom_scene_ready` | The embed successfully loaded and started playing | `video_id` | TimerApp.tsx |
 | `custom_scene_unmute_blocked` | The browser wouldn't unmute the embed (iOS fallback path) | – | TimerApp.tsx |
 | `fullscreen_enter` | Fullscreen is toggled on | – | TimerApp.tsx |
 
