@@ -170,8 +170,10 @@ export function trackFullscreenEnter() {
   gtagEvent('fullscreen_enter', {})
 }
 
-/** The mute/unmute pill was toggled — captures user intent, not just ambient start/stop. */
-export function trackSoundToggle(params: { sound_on: boolean }) {
+/** Sound was muted/unmuted — captures user intent, not just ambient start/stop.
+ *  `source` distinguishes the speaker button, dragging the volume slider to/from
+ *  0%, and the 'm' keyboard shortcut. */
+export function trackSoundToggle(params: { sound_on: boolean; source: 'button' | 'slider' | 'keyboard' }) {
   gtagEvent('sound_change', params)
 }
 

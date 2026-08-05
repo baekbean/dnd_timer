@@ -67,7 +67,7 @@ describe('SoundPanel', () => {
     click(muteButton)
 
     expect(useTimerStore.getState().soundOn).toBe(false)
-    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false })
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false, source: 'button' })
     const unmuteButton = screen.getByRole('button', { name: 'Unmute' })
     expect(unmuteButton).toBeTruthy()
     // Muted glyph: swaps to the volume-x X-mark path, wave-arc path gone.
@@ -75,14 +75,110 @@ describe('SoundPanel', () => {
     expect(unmuteButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeNull()
   })
 
-  it('disables the volume slider while muted', () => {
+  it('moves the slider to 0% when muted via the speaker button, then restores it on unmute — without touching the stored volume', () => {
+    renderPanel({ scene: builtInScene, onClose: vi.fn() })
+
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('60')
+
+    click(screen.getByRole('button', { name: 'Mute' }))
+
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('0')
+    // The mute button never mutates volume — only the display resets to 0.
+    expect(useTimerStore.getState().volume).toBe(0.6)
+
+    click(screen.getByRole('button', { name: 'Unmute' }))
+
+    expect((screen.getByRole('slider') as HTMLInputElement).value).toBe('60')
+    expect(useTimerStore.getState().volume).toBe(0.6)
+  })
+
+  it('keeps the volume slider interactive while muted, so dragging it can unmute', () => {
     renderPanel({ scene: builtInScene, onClose: vi.fn() })
 
     expect((screen.getByRole('slider') as HTMLInputElement).disabled).toBe(false)
 
     click(screen.getByRole('button', { name: 'Mute' }))
 
-    expect((screen.getByRole('slider') as HTMLInputElement).disabled).toBe(true)
+    expect((screen.getByRole('slider') as HTMLInputElement).disabled).toBe(false)
+  })
+
+  it('mutes and tracks it when the slider is dragged down to 0%', () => {
+    renderPanel({ scene: builtInScene, onClose: vi.fn() })
+
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '0' } })
+
+    expect(useTimerStore.getState().volume).toBe(0)
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false, source: 'slider' })
+  })
+
+  it('unmutes and tracks it when the slider is dragged up from 0% while muted', () => {
+    useTimerStore.setState({ soundOn: false, volume: 0 })
+    renderPanel({ scene: builtInScene, onClose: vi.fn() })
+
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '25' } })
+
+    expect(useTimerStore.getState().volume).toBeCloseTo(0.25)
+    expect(useTimerStore.getState().soundOn).toBe(true)
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: true, source: 'slider' })
+  })
+
+  it('does not re-toggle or re-track mute for an ordinary drag between two nonzero values', () => {
+    renderPanel({ scene: builtInScene, onClose: vi.fn() })
+
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '40' } })
+
+    expect(useTimerStore.getState().volume).toBeCloseTo(0.4)
+    expect(useTimerStore.getState().soundOn).toBe(true)
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+  })
+
+  it('does not flap the mute state while the value jitters mid-drag — only the settled value on release decides it', () => {
+    renderPanel({ scene: builtInScene, onClose: vi.fn() })
+
+    const root = screen.getByRole('slider').parentElement!.parentElement!
+    // Reshaped's SliderControlled renders [bar div, thumbs div] as the root's
+    // only two children, in that order — the bar is always the first child.
+    const bar = root.children[0] as HTMLElement
+    // Reshaped computes drag position from the bar's layout rect — jsdom does
+    // no real layout, so give it a fixed, round-number rect to compute against.
+    vi.spyOn(bar, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      right: 216,
+      width: 216,
+      top: 0,
+      bottom: 20,
+      height: 20,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    })
+    Object.defineProperty(bar, 'clientWidth', { value: 216, configurable: true })
+
+    // clientX=8 → 0% (bar left edge + half the thumb's reserved 16px).
+    // clientX=18 → 5%. clientX=108 → 50%.
+    // Reshaped's own mousedown handler commits its start position immediately
+    // (independent of this fix), so start the drag at a nonzero value —
+    // matching the already-unmuted state, so that commit is a no-op — then
+    // jitter across the 0% boundary via pure mousemoves before releasing.
+    fireEvent.mouseDown(root, { clientX: 108 })
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+
+    fireEvent.mouseMove(window, { clientX: 18 })
+    fireEvent.mouseMove(window, { clientX: 8 })
+    fireEvent.mouseMove(window, { clientX: 18 })
+    fireEvent.mouseMove(window, { clientX: 8 })
+
+    // None of the mid-drag jitter across the boundary should have committed
+    // a mute toggle yet — only drag release does.
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+    expect(useTimerStore.getState().soundOn).toBe(true)
+
+    fireEvent.mouseUp(window)
+
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(trackSoundToggle).toHaveBeenCalledTimes(1)
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false, source: 'slider' })
   })
 
   it('closes on the X button, Escape, and an outside click', () => {

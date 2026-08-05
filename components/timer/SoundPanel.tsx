@@ -35,12 +35,14 @@ function MasterVolumeControl({
   name,
   value,
   onChangeValue,
+  onCommitValue,
 }: {
   soundOn: boolean
   onToggleSoundOn: (next: boolean) => void
   name: string
   value: number
   onChangeValue: (v: number) => void
+  onCommitValue: (v: number) => void
 }) {
   return (
     <div className="flex items-center gap-3 rounded-full bg-[rgba(52,52,52,0.06)] py-2 pl-3 pr-4">
@@ -58,11 +60,21 @@ function MasterVolumeControl({
         />
       </button>
       <div className="min-w-0 flex-1">
+        {/* Stays interactive while muted — dragging it is itself an unmute
+         * gesture (see onCommitValue in the caller), matching how video
+         * players usually treat "grab the volume slider" as "I want sound."
+         * Display-only 0 while muted: the real `value` is untouched, so
+         * unmuting via the speaker button (or the 'm' shortcut) snaps the
+         * thumb straight back to where you left it, audio included.
+         * The mute-toggle decision lives in onChangeCommit (fires once, on
+         * release/click/keyboard-nudge) rather than onChange (fires on every
+         * step of a drag) — deciding it live would flap the mute state any
+         * time an in-progress drag jitters across the 0% boundary. */}
         <Slider
           name={name}
-          value={Math.round(value * 100)}
+          value={soundOn ? Math.round(value * 100) : 0}
           onChange={({ value }) => onChangeValue(value / 100)}
-          disabled={!soundOn}
+          onChangeCommit={({ value }) => onCommitValue(value / 100)}
         />
       </div>
     </div>
@@ -115,6 +127,12 @@ export default function SoundPanel({
   const setActiveVolume = showVideoControls ? setVideoVolume : setVolume
   const activeVolumeName = showVideoControls ? 'video-volume' : 'ambient-volume'
 
+  const handleToggleSoundOn = (checked: boolean, source: 'button' | 'slider') => {
+    trackSoundToggle({ sound_on: checked, source })
+    posthog.capture('sound_change', { sound_on: checked, source })
+    setSoundOn(checked)
+  }
+
   // Box styling (background/radius/shadow/padding) comes from the Popover or
   // Modal wrapper below — this is just the content. The Modal variant is
   // already its own labeled dialog — a nested role="dialog" here would be a
@@ -139,14 +157,19 @@ export default function SoundPanel({
         <span className="font-pretendard text-[15px] text-[#343434]">Volume</span>
         <MasterVolumeControl
           soundOn={soundOn}
-          onToggleSoundOn={(checked) => {
-            trackSoundToggle({ sound_on: checked })
-            posthog.capture('sound_change', { sound_on: checked })
-            setSoundOn(checked)
-          }}
+          onToggleSoundOn={(checked) => handleToggleSoundOn(checked, 'button')}
           name={activeVolumeName}
           value={activeVolume}
           onChangeValue={setActiveVolume}
+          onCommitValue={(v) => {
+            // Dragging to exactly 0% mutes; dragging off of 0% while muted
+            // unmutes — the slider drives soundOn directly at that boundary,
+            // same as most video players. Decided on commit (drag release/
+            // click/keyboard nudge), not on every onChange step, so jitter
+            // mid-drag across the 0% line can't flap the mute state.
+            const shouldBeOn = v > 0
+            if (shouldBeOn !== soundOn) handleToggleSoundOn(shouldBeOn, 'slider')
+          }}
         />
 
         <div className="flex flex-col gap-4">
