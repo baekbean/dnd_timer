@@ -19,6 +19,7 @@ import { markSceneEntered, msSinceSceneEntered } from '@/lib/timer/exposureTrack
 import { soundEngine } from '@/lib/timer/sound'
 import { useWakeLock } from '@/lib/timer/useWakeLock'
 import { useIdleHide } from '@/lib/timer/useIdleHide'
+import { useFullscreen } from '@/lib/timer/useFullscreen'
 import { formatTime, getDigitScale } from '@/lib/timer/formatTime'
 import SceneBackground from '@/components/timer/SceneBackground'
 import type { YoutubeControls } from '@/components/timer/YoutubeLayer'
@@ -257,37 +258,6 @@ function FocusExtendControl({ onExtend }: { onExtend: (minutes: number) => void 
   )
 }
 
-function useFullscreen() {
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  // iPhone Safari has no Fullscreen API for non-video elements (iPadOS 16.4+
-  // and other browsers do) — detect support so the button can hide itself
-  // instead of sitting there doing nothing when tapped.
-  const [isSupported, setIsSupported] = useState(false)
-
-  useEffect(() => {
-    const supported = typeof document.documentElement.requestFullscreen === 'function'
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-guard: detects fullscreen API support after hydration; server always starts false; one extra render is intentional
-    setIsSupported(supported)
-    if (!supported) return
-    const onChange = () => setIsFullscreen(Boolean(document.fullscreenElement))
-    document.addEventListener('fullscreenchange', onChange)
-    return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [])
-
-  const toggle = () => {
-    try {
-      const result = document.fullscreenElement
-        ? document.exitFullscreen?.()
-        : document.documentElement.requestFullscreen?.()
-      result?.catch?.(() => {})
-    } catch {
-      // Fullscreen API unsupported or blocked
-    }
-  }
-
-  return { isFullscreen, isSupported, toggle }
-}
-
 export default function TimerApp() {
   const phase = useTimerStore((s) => s.phase)
   const status = useTimerStore((s) => s.status)
@@ -326,7 +296,8 @@ export default function TimerApp() {
   const [desktopSnackbarOpen, setDesktopSnackbarOpen] = useState(false)
   const deviceType = useDeviceType()
   const isLandscape = useLandscape()
-  const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen()
+  const containerRef = useRef<HTMLElement>(null)
+  const { isFullscreen, isSupported: fullscreenSupported, toggle: toggleFullscreen } = useFullscreen(containerRef)
   const scene = resolveScene(sceneId, customYoutubeId)
   // Whether the video's own audio should actually be audible — the source
   // toggle can mute it even while the master Sound pill is on.
@@ -682,6 +653,7 @@ export default function TimerApp() {
 
   return (
     <main
+      ref={containerRef}
       className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden"
       style={{ cursor: chromeHidden ? 'none' : 'auto' }}
     >
@@ -718,7 +690,13 @@ export default function TimerApp() {
         </button>
 
         {soundPanelOpen && (
-          <SoundPanel scene={scene} triggerRef={soundButtonRef} onClose={() => setSoundPanelOpen(false)} />
+          <SoundPanel
+            scene={scene}
+            triggerRef={soundButtonRef}
+            containerRef={containerRef}
+            isFullscreen={isFullscreen}
+            onClose={() => setSoundPanelOpen(false)}
+          />
         )}
 
         {/* The parent page's gesture doesn't always reach a cross-origin
@@ -871,6 +849,8 @@ export default function TimerApp() {
             setSceneEditorOpen(open)
             if (!open) setSceneEditorError(null)
           }}
+          containerRef={containerRef}
+          isFullscreen={isFullscreen}
         />
       </div>
 
@@ -881,7 +861,9 @@ export default function TimerApp() {
         />
       )}
 
-      {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {settingsOpen && (
+        <SettingsPanel onClose={() => setSettingsOpen(false)} containerRef={containerRef} />
+      )}
       {justCompletedFocus && (
         <CompleteOverlay sessionsToday={sessionsToday} onDismiss={dismissComplete} />
       )}

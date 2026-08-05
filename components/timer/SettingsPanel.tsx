@@ -34,6 +34,10 @@ function diffTiming(draft: TimingDraft, settings: TimerSettings): Partial<Timing
 
 interface Props {
   onClose: () => void
+  /** Timer's fullscreen container — keeps the modal inside it instead of
+   * portaling to document.body, which would render outside (and so be
+   * invisible/unreachable) while the timer is fullscreen. */
+  containerRef?: React.RefObject<HTMLElement | null>
 }
 
 function DurationField({
@@ -200,7 +204,7 @@ function FeedbackLink() {
   )
 }
 
-export default function SettingsPanel({ onClose }: Props) {
+export default function SettingsPanel({ onClose, containerRef }: Props) {
   const settings = useTimerStore((s) => s.settings)
   const status = useTimerStore((s) => s.status)
   const phase = useTimerStore((s) => s.phase)
@@ -267,7 +271,7 @@ export default function SettingsPanel({ onClose }: Props) {
 
   return (
     <>
-      <Modal active onClose={requestClose} ariaLabel="Settings">
+      <Modal active onClose={requestClose} ariaLabel="Settings" containerRef={containerRef}>
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-aspekta text-[18px] uppercase text-[#343434]">Settings</h2>
           <button
@@ -362,7 +366,7 @@ export default function SettingsPanel({ onClose }: Props) {
       </Modal>
 
       {pending && (
-        <Modal active onClose={() => resolvePending('next')} ariaLabel="Apply new time">
+        <Modal active onClose={() => resolvePending('next')} ariaLabel="Apply new time" containerRef={containerRef}>
           <p className="mb-5 font-pretendard text-[15px] leading-relaxed text-[#343434]">
             Apply the new time to your current session right now, or wait until the next session?
           </p>
