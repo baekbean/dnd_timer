@@ -13,6 +13,8 @@ interface YTPlayer {
   playVideo(): void
   seekTo(seconds: number, allowSeekAhead: boolean): void
   getPlayerState(): number
+  unloadModule(moduleName: string): void
+  setOption(module: string, option: string, value: unknown): void
 }
 
 interface YTPlayerEvent {
@@ -33,6 +35,7 @@ interface YTNamespace {
         onReady?: (event: YTPlayerEvent) => void
         onError?: (event: YTPlayerEvent) => void
         onStateChange?: (event: YTPlayerEvent) => void
+        onApiChange?: (event: YTPlayerEvent) => void
       }
     }
   ) => YTPlayer
@@ -179,6 +182,24 @@ export default function YoutubeLayer({
       .then((YT) => {
         if (cancelled) return
 
+        // Two layers, because either one alone misses a real case:
+        // unloadModule('captions') covers a viewer's saved "always show
+        // captions" YouTube preference; setOption('captions', 'track', {})
+        // covers a video whose uploader forced captions on by default,
+        // where YouTube auto-selects a caption track independently of the
+        // module's load state (confirmed via instrumentation: the module
+        // loads and unloads cleanly, but a track can still get selected
+        // afterward). Safe/idempotent to call blind, even with nothing to
+        // clear.
+        const suppressCaptions = (target: YTPlayer) => {
+          try {
+            target.unloadModule('captions')
+          } catch {}
+          try {
+            target.setOption('captions', 'track', {})
+          } catch {}
+        }
+
         // Checks whether playback actually caught; if not, re-issues
         // playVideo() and checks again on a backoff, up to the retry limit.
         const verifyPlaying = (delay: number) => {
@@ -212,6 +233,11 @@ export default function YoutubeLayer({
             controls: 0,
             disablekb: 1,
             fs: 0,
+            // No in-app CC button (controls: 0 hides it), so avoid forcing
+            // captions on; suppressCaptions() below covers both a viewer's
+            // saved on-by-default preference and a video whose uploader
+            // forced captions on, which this alone doesn't.
+            cc_load_policy: 0,
             iv_load_policy: 3,
             loop: 1,
             playlist: videoId,
@@ -224,9 +250,19 @@ export default function YoutubeLayer({
             onReady: (event) => {
               if (cancelled) return
               event.target.playVideo()
+              suppressCaptions(event.target)
               setReady(true)
               callbacksRef.current.onReady?.()
               verifyPlaying(PLAY_FIRST_VERIFY_MS)
+            },
+            onApiChange: (event) => {
+              if (cancelled) return
+              // The captions module loads asynchronously and can finish loading
+              // AFTER onReady already fired (e.g. a viewer's "always show
+              // captions" YouTube account setting) — onApiChange fires whenever
+              // the set of loaded modules changes, so re-issue the suppression
+              // here too.
+              suppressCaptions(event.target)
             },
             onError: (event) => {
               if (cancelled) return
@@ -236,6 +272,10 @@ export default function YoutubeLayer({
               if (event.data === YT.PlayerState.PLAYING) {
                 retryCount = 0
                 clearRetryTimer()
+                // A video whose uploader forced captions on by default can
+                // auto-select a caption track once real playback starts,
+                // independent of any module-load event — re-clear here too.
+                suppressCaptions(event.target)
               }
               // Backstop for the loop param, which doesn't cover every video
               if (event.data === YT.PlayerState.ENDED) {
