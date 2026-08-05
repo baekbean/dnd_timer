@@ -450,7 +450,7 @@ export default function TimerAppYoutube() {
           aria-label={soundOn ? 'Mute sound' : 'Unmute sound'}
           aria-pressed={soundOn}
           onClick={() => {
-            trackSoundToggle({ sound_on: !soundOn })
+            trackSoundToggle({ sound_on: !soundOn, source: 'button' })
             setSoundOn(!soundOn)
           }}
           className="flex items-center gap-2 rounded-md px-3 py-2 transition-opacity hover:opacity-90"

@@ -12,6 +12,7 @@ import {
   trackCustomSceneError,
   trackCustomSceneReady,
   trackCustomSceneUnmuteBlocked,
+  trackSoundToggle,
 } from '@/lib/ga'
 import posthog from 'posthog-js'
 import { CUSTOM_SCENE_ID, DEFAULT_SCENE_ID, resolveScene } from '@/lib/timer/scenes'
@@ -268,6 +269,7 @@ export default function TimerApp() {
   const customSoundSource = useTimerStore((s) => s.customSoundSource)
   const ambientPresetId = useTimerStore((s) => s.ambientPresetId)
   const soundOn = useTimerStore((s) => s.soundOn)
+  const setSoundOn = useTimerStore((s) => s.setSoundOn)
   const volume = useTimerStore((s) => s.volume)
   const videoVolume = useTimerStore((s) => s.videoVolume)
   const start = useTimerStore((s) => s.start)
@@ -449,6 +451,34 @@ export default function TimerApp() {
       window.removeEventListener('keydown', unlock)
     }
   }, [])
+
+  // YouTube-style 'm' shortcut, global like the pill/panel mute control it
+  // mirrors — skipped while focus is inside a text field so renaming a
+  // custom scene or editing settings can still type the letter. The volume
+  // slider's own thumb is a real <input type="range"> that Reshaped focuses
+  // after every drag/click, so it's deliberately exempted — otherwise 'm'
+  // would go dead the moment someone touches the slider.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== 'm') return
+      if (e.repeat) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      const tag = target?.tagName
+      const isTextEntry =
+        (tag === 'INPUT' && (target as HTMLInputElement).type !== 'range') ||
+        tag === 'TEXTAREA' ||
+        target?.isContentEditable
+      if (isTextEntry) return
+
+      const next = !useTimerStore.getState().soundOn
+      trackSoundToggle({ sound_on: next, source: 'keyboard' })
+      posthog.capture('sound_change', { sound_on: next, source: 'keyboard' })
+      setSoundOn(next)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [setSoundOn])
 
   // Ticker — the store computes remaining time from endAt, so drift-free
   useEffect(() => {

@@ -9,6 +9,7 @@ import {
   trackCustomSceneReady,
   trackCustomSceneUnmuteBlocked,
   trackSessionAbandon,
+  trackSoundToggle,
 } from '@/lib/ga'
 import posthog from 'posthog-js'
 import { WAVE_ARC_PATH, X_MARK_PATH } from './helpers/speakerIconPaths'
@@ -143,6 +144,82 @@ describe('TimerApp — Sound panel + custom-scene handlers', () => {
     expect(screen.getByText('Muted')).toBeTruthy()
     expect(soundButton.querySelector(`path[d*="${X_MARK_PATH}"]`)).toBeTruthy()
     expect(soundButton.querySelector(`path[d*="${WAVE_ARC_PATH}"]`)).toBeNull()
+  })
+
+  it('toggles mute with the "m" key, matching the YouTube shortcut', () => {
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    fireEvent.keyDown(document, { key: 'm' })
+
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false, source: 'keyboard' })
+
+    fireEvent.keyDown(document, { key: 'M' })
+
+    expect(useTimerStore.getState().soundOn).toBe(true)
+  })
+
+  it('ignores the "m" shortcut while typing in a text field', () => {
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    const input = document.createElement('input')
+    document.body.appendChild(input)
+    input.focus()
+
+    fireEvent.keyDown(input, { key: 'm' })
+
+    expect(useTimerStore.getState().soundOn).toBe(true)
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+
+    document.body.removeChild(input)
+  })
+
+  it('ignores the "m" shortcut when a modifier key is held, so it does not hijack Cmd+M/Ctrl+M', () => {
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    fireEvent.keyDown(document, { key: 'm', metaKey: true })
+    fireEvent.keyDown(document, { key: 'm', ctrlKey: true })
+    fireEvent.keyDown(document, { key: 'm', altKey: true })
+
+    expect(useTimerStore.getState().soundOn).toBe(true)
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+  })
+
+  it('still toggles with "m" while the volume slider has focus, since it is an <input> but not a text field', () => {
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    const rangeInput = document.createElement('input')
+    rangeInput.type = 'range'
+    document.body.appendChild(rangeInput)
+    rangeInput.focus()
+
+    fireEvent.keyDown(rangeInput, { key: 'm' })
+
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(trackSoundToggle).toHaveBeenCalledWith({ sound_on: false, source: 'keyboard' })
+
+    document.body.removeChild(rangeInput)
+  })
+
+  it('ignores a held-down "m" (key repeat), so it does not spam toggles or thrash ambient audio', () => {
+    useTimerStore.setState({ soundOn: true })
+    renderTimerApp()
+
+    fireEvent.keyDown(document, { key: 'm', repeat: true })
+    fireEvent.keyDown(document, { key: 'm', repeat: true })
+    fireEvent.keyDown(document, { key: 'm', repeat: true })
+
+    expect(useTimerStore.getState().soundOn).toBe(true)
+    expect(trackSoundToggle).not.toHaveBeenCalled()
+
+    // A genuine (non-repeat) press still works afterward.
+    fireEvent.keyDown(document, { key: 'm' })
+    expect(useTimerStore.getState().soundOn).toBe(false)
+    expect(trackSoundToggle).toHaveBeenCalledTimes(1)
   })
 
   it('falls back to the default scene and reopens the editor with an error when the embed errors', () => {

@@ -45,7 +45,7 @@ Three destinations:
 
 | Event | Fires when | Params | Where |
 |---|---|---|---|
-| `sound_change` | The mute/unmute speaker button is toggled | `sound_on` | SoundPanel.tsx |
+| `sound_change` | Sound is muted/unmuted — via the speaker button, dragging the volume slider to/from 0%, or the 'm' keyboard shortcut | `sound_on`, `source` (`button`\|`slider`\|`keyboard`) | SoundPanel.tsx, TimerApp.tsx |
 | `custom_scene_sound_source` | The Ambient/Video source toggle is switched (custom YouTube scene only) | `source` (`app`\|`video`) | SoundPanel.tsx |
 | `ambient_preset_change` | A different ambient noise preset is picked | `preset` (`white`\|`brown`\|`rain`\|`birds`\|`gardenCrickets`\|`nightBugs`) | SoundPanel.tsx |
 
