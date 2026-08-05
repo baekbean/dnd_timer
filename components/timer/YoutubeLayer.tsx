@@ -13,6 +13,7 @@ interface YTPlayer {
   playVideo(): void
   seekTo(seconds: number, allowSeekAhead: boolean): void
   getPlayerState(): number
+  unloadModule(moduleName: string): void
 }
 
 interface YTPlayerEvent {
@@ -212,6 +213,10 @@ export default function YoutubeLayer({
             controls: 0,
             disablekb: 1,
             fs: 0,
+            // No in-app CC button (controls: 0 hides it), so avoid forcing
+            // captions on; unloadModule('captions') below covers a viewer's
+            // own saved on-by-default preference, which this alone doesn't.
+            cc_load_policy: 0,
             iv_load_policy: 3,
             loop: 1,
             playlist: videoId,
@@ -224,6 +229,9 @@ export default function YoutubeLayer({
             onReady: (event) => {
               if (cancelled) return
               event.target.playVideo()
+              try {
+                event.target.unloadModule('captions')
+              } catch {}
               setReady(true)
               callbacksRef.current.onReady?.()
               verifyPlaying(PLAY_FIRST_VERIFY_MS)

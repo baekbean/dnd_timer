@@ -30,6 +30,7 @@ function createFakePlayer(opts: { blockUnmute?: boolean } = {}) {
     playVideo: vi.fn(),
     seekTo: vi.fn(),
     getPlayerState: vi.fn(() => player._state),
+    unloadModule: vi.fn(),
   }
   return player
 }
@@ -108,10 +109,43 @@ describe('YoutubeLayer', () => {
     expect(capturedOptions!.playerVars.autoplay).toBe(1)
     expect(capturedOptions!.playerVars.loop).toBe(1)
     expect(capturedOptions!.playerVars.playlist).toBe(VIDEO_ID)
+    expect(capturedOptions!.playerVars.cc_load_policy).toBe(0)
     expect(capturedOptions!.host).toBe('https://www.youtube-nocookie.com')
 
     fireReady()
     expect(playerInstance.playVideo).toHaveBeenCalled()
+  })
+
+  it('suppresses captions on ready, regardless of the viewer’s saved YouTube preference', async () => {
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+
+    fireReady()
+    expect(playerInstance.unloadModule).toHaveBeenCalledWith('captions')
+  })
+
+  it('still starts playback and fires onReady even if unloadModule throws (e.g. an older IFrame API build)', async () => {
+    const onReady = vi.fn()
+    render(
+      <YoutubeLayer
+        videoId={VIDEO_ID}
+        soundOn={false}
+        volume={0.6}
+        onError={vi.fn()}
+        onReady={onReady}
+        onAudioBlockedChange={vi.fn()}
+      />
+    )
+    await flushMicrotasks()
+
+    playerInstance.unloadModule.mockImplementation(() => {
+      throw new Error('unloadModule not supported')
+    })
+
+    fireReady()
+
+    expect(playerInstance.playVideo).toHaveBeenCalled()
+    expect(onReady).toHaveBeenCalledTimes(1)
   })
 
   it('calls onReady once the player signals it has loaded', async () => {
