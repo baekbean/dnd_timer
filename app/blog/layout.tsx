@@ -6,7 +6,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
     <main className="bg-[#F6F6F3]">
       <Nav overLightBackground />
       {children}
-      <Footer />
+      <Footer showSocialLinks={false} />
     </main>
   )
 }

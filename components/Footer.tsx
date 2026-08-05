@@ -6,7 +6,14 @@ const socialLinks = [
   { label: 'Mail', href: 'mailto:hello.dndroom@gmail.com' },
 ]
 
-export default function Footer() {
+type Props = {
+  // /updates and /blog drop the social entry points — those pages are
+  // reading-focused, and the social links pull attention away from
+  // "Read next"/the feedback link without adding anything post-specific.
+  showSocialLinks?: boolean
+}
+
+export default function Footer({ showSocialLinks = true }: Props = {}) {
   return (
     <footer className="relative w-full pt-[40px] pb-[100px] px-4 md:px-10 overflow-hidden">
       {/* Background texture */}
@@ -35,23 +42,25 @@ export default function Footer() {
         </div>
 
         {/* Social links */}
-        <div className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4] w-[336px] text-right">
-          {socialLinks.map((link, i) => (
-            <span key={link.label}>
-              <a
-                href={link.href}
-                target={link.href.startsWith('http') ? '_blank' : undefined}
-                rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="hover:underline transition-opacity hover:opacity-60"
-              >
-                {link.label}
-              </a>
-              {i < socialLinks.length - 1 && (
-                <span className="mx-2">·</span>
-              )}
-            </span>
-          ))}
-        </div>
+        {showSocialLinks && (
+          <div className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4] w-[336px] text-right">
+            {socialLinks.map((link, i) => (
+              <span key={link.label}>
+                <a
+                  href={link.href}
+                  target={link.href.startsWith('http') ? '_blank' : undefined}
+                  rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                  className="hover:underline transition-opacity hover:opacity-60"
+                >
+                  {link.label}
+                </a>
+                {i < socialLinks.length - 1 && (
+                  <span className="mx-2">·</span>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </footer>
   )
