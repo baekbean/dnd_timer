@@ -40,6 +40,14 @@ export default function Nav({ overLightBackground = false }: Props = {}) {
         />
         <div className="flex items-center gap-6">
           <Link
+            href="/blog"
+            className={`font-pretendard text-[14px] transition-colors ${
+              scrolled ? 'text-[#343434] hover:text-[#343434]/70' : 'text-[#F6F6F3] hover:text-[#F6F6F3]/70'
+            }`}
+          >
+            Blog
+          </Link>
+          <Link
             href="/updates"
             className={`font-pretendard text-[14px] transition-colors ${
               scrolled ? 'text-[#343434] hover:text-[#343434]/70' : 'text-[#F6F6F3] hover:text-[#F6F6F3]/70'

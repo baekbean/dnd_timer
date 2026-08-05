@@ -52,7 +52,9 @@ export function trackWaitlistClick(params: WaitlistClickParams) {
 
 // ── start_focusing_click ────────────────────────────────────────
 /** The nav CTA was clicked, sending the visitor straight into the timer at "/". */
-export function trackStartFocusingClick(params: { button_location: 'nav' }) {
+export function trackStartFocusingClick(params: {
+  button_location: 'nav' | 'blog_post_callout' | 'blog_post_end_cta'
+}) {
   gtagEvent('start_focusing_click', params)
 }
 
