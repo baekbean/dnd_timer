@@ -2,6 +2,15 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.11] - 2026-08-05
+
+### Added
+- Press **m** anywhere to mute or unmute, like on YouTube.
+
+### Changed
+- The volume slider now stays draggable even while muted — grabbing it and moving it off 0% unmutes automatically, and dragging it down to 0% mutes.
+- The volume slider visually drops to 0% while muted and snaps back to your last level the moment you unmute, so it always reflects what you'll actually hear.
+
 ## [0.0.1.10] - 2026-08-05
 
 ### Fixed
