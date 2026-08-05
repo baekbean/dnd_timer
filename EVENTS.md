@@ -56,7 +56,7 @@ Three destinations:
 | `duration_preset_click` | A Focus/Break/Sessions shortcut chip is clicked (not manual typing) | `field` (`focus`\|`break`\|`sessions`), `value` | SettingsPanel.tsx |
 | `settings_toggle_change` | An Auto-start/Notify switch is flipped — for Notify, only once the permission gate actually lets the change through | `field` (`auto_start_breaks`\|`auto_start_focus`\|`notify_on_complete`), `value` | SettingsPanel.tsx |
 | `settings_saved` | The settings modal is closed with pending duration changes | dynamic patch of changed fields, `apply_mode`? | SettingsPanel.tsx |
-| `feedback_click` | "Send feedback" is clicked, revealing the inline form | `button_location`, `page`? | SettingsPanel.tsx, SeoFeedbackLink.tsx |
+| `feedback_click` | "Send feedback" is clicked, revealing the inline form (or, for `UpdatesFeedbackLink`/`BlogFeedbackLink`, opening the feedback form directly) | `button_location`, `page`? (`updates`\|`blog`\|…) | SettingsPanel.tsx, SeoFeedbackLink.tsx, components/timer/UpdatesFeedbackLink.tsx, components/blog/BlogFeedbackLink.tsx |
 | `feedback_submit` | The feedback form is actually submitted | `page`? | SettingsPanel.tsx |
 
 ### Mobile → desktop/iPad handoff (`MobileHandoffSheet.tsx`)
@@ -97,7 +97,7 @@ Same `getHandoffContext()` blob auto-injected on all of these.
 | Event | Fires when | Params | Destinations | Where |
 |---|---|---|---|---|---|
 | `join_waitlist` / `waitlist_click` | The waitlist form is submitted | `button_location` (`hero`\|`cta`), `button_text`, `email` (Vercel only) | Vercel Analytics + GA4 + PostHog | Hero.tsx, Section3.tsx |
-| `start_focusing_click` | The Nav CTA ("Start focusing") is clicked, linking straight to `/` | `button_location` (`nav`) | GA4 + PostHog | Nav.tsx |
+| `start_focusing_click` | A "Start focusing" CTA is clicked, linking straight to `/` | `button_location` (`nav`\|`blog_post_callout`\|`blog_post_end_cta`) | GA4 + PostHog | Nav.tsx, components/blog/BlogCallout.tsx, components/blog/BlogEndCta.tsx |
 | `section_view` | A landing-page section scrolls into view (fires once per session) | `section_name` (`hero`\|`features`\|`workspace_images`\|`cta`) | GA4 | SectionTracker.tsx |
 
 ## Experimental routes

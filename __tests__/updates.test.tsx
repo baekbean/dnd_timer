@@ -24,7 +24,7 @@ describe('getUpdatePost', () => {
 describe('blogPostingJsonLd', () => {
   it('builds a BlogPosting entry from a post', () => {
     const post = UPDATE_POSTS[0]
-    const jsonLd = blogPostingJsonLd(post)
+    const jsonLd = blogPostingJsonLd(post, '/updates')
     expect(jsonLd['@type']).toBe('BlogPosting')
     expect(jsonLd.headline).toBe(post.title)
     expect(jsonLd.datePublished).toBe(post.date)

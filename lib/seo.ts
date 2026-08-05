@@ -1,5 +1,3 @@
-import type { UpdatePost } from './updates'
-
 export const SITE_URL = 'https://nooktimer.com'
 export const SITE_NAME = 'NookTimer'
 export const SITE_TITLE = 'NookTimer – Focus Timer for Your Space'
@@ -59,11 +57,11 @@ export function webApplicationJsonLd() {
   }
 }
 
-export function faqJsonLd() {
+export function faqPageJsonLd(items: FaqItem[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map((item) => ({
+    mainEntity: items.map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -74,14 +72,25 @@ export function faqJsonLd() {
   }
 }
 
-export function blogPostingJsonLd(post: UpdatePost) {
+export function faqJsonLd() {
+  return faqPageJsonLd(FAQ_ITEMS)
+}
+
+interface BlogPostingLike {
+  slug: string
+  title: string
+  date: string
+  excerpt: string
+}
+
+export function blogPostingJsonLd(post: BlogPostingLike, basePath: '/updates' | '/blog') {
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
     datePublished: post.date,
     description: post.excerpt,
-    url: `${SITE_URL}/updates/${post.slug}`,
+    url: `${SITE_URL}${basePath}/${post.slug}`,
     author: { '@type': 'Organization', name: SITE_NAME },
   }
 }
