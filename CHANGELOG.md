@@ -2,6 +2,11 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.1.10] - 2026-08-05
+
+### Fixed
+- Captions on the custom YouTube background scene now stay off for videos whose uploader forced captions on by default too, not just viewers with a saved "always show captions" preference — the previous fix only caught the latter case.
+
 ## [0.0.1.9] - 2026-08-05
 
 ### Fixed
