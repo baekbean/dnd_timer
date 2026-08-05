@@ -31,6 +31,7 @@ function createFakePlayer(opts: { blockUnmute?: boolean } = {}) {
     seekTo: vi.fn(),
     getPlayerState: vi.fn(() => player._state),
     unloadModule: vi.fn(),
+    setOption: vi.fn(),
   }
   return player
 }
@@ -47,6 +48,7 @@ interface FakePlayerOptions {
     onReady?: (event: { target: FakePlayer }) => void
     onError?: (event: { target: FakePlayer; data: number }) => void
     onStateChange?: (event: { target: FakePlayer; data: number }) => void
+    onApiChange?: (event: { target: FakePlayer }) => void
   }
 }
 
@@ -90,6 +92,12 @@ function fireReady() {
   })
 }
 
+function fireApiChange() {
+  act(() => {
+    capturedOptions?.events.onApiChange?.({ target: playerInstance })
+  })
+}
+
 describe('YoutubeLayer', () => {
   beforeEach(() => {
     installFakeYT()
@@ -122,6 +130,81 @@ describe('YoutubeLayer', () => {
 
     fireReady()
     expect(playerInstance.unloadModule).toHaveBeenCalledWith('captions')
+    expect(playerInstance.setOption).toHaveBeenCalledWith('captions', 'track', {})
+  })
+
+  it('also suppresses captions via onApiChange, since the captions module can finish loading after onReady', async () => {
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+
+    fireReady()
+    playerInstance.unloadModule.mockClear()
+    playerInstance.setOption.mockClear()
+
+    fireApiChange()
+    expect(playerInstance.unloadModule).toHaveBeenCalledWith('captions')
+    expect(playerInstance.setOption).toHaveBeenCalledWith('captions', 'track', {})
+  })
+
+  it('re-unloads captions on every onApiChange firing, since it can fire more than once', async () => {
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+
+    fireReady()
+    playerInstance.unloadModule.mockClear()
+
+    fireApiChange()
+    fireApiChange()
+
+    expect(playerInstance.unloadModule).toHaveBeenNthCalledWith(1, 'captions')
+    expect(playerInstance.unloadModule).toHaveBeenNthCalledWith(2, 'captions')
+  })
+
+  it('ignores onApiChange after unmount instead of calling into the destroyed player', async () => {
+    const { unmount } = render(
+      <YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />
+    )
+    await flushMicrotasks()
+    fireReady()
+
+    unmount()
+    playerInstance.unloadModule.mockClear()
+
+    fireApiChange()
+    expect(playerInstance.unloadModule).not.toHaveBeenCalled()
+  })
+
+  it('re-clears the caption track once real playback starts, since a forced-on video can auto-select a track independent of any module-load event', async () => {
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+
+    fireReady()
+    playerInstance.unloadModule.mockClear()
+    playerInstance.setOption.mockClear()
+
+    act(() => {
+      capturedOptions!.events.onStateChange?.({ target: playerInstance, data: STATE_PLAYING })
+    })
+
+    expect(playerInstance.unloadModule).toHaveBeenCalledWith('captions')
+    expect(playerInstance.setOption).toHaveBeenCalledWith('captions', 'track', {})
+  })
+
+  it('does not touch captions on non-PLAYING state changes, only on the transition to PLAYING', async () => {
+    render(<YoutubeLayer videoId={VIDEO_ID} soundOn={false} volume={0.6} onError={vi.fn()} onAudioBlockedChange={vi.fn()} />)
+    await flushMicrotasks()
+
+    fireReady()
+    playerInstance.unloadModule.mockClear()
+    playerInstance.setOption.mockClear()
+
+    act(() => {
+      // An arbitrary non-PLAYING, non-ENDED state (e.g. BUFFERING).
+      capturedOptions!.events.onStateChange?.({ target: playerInstance, data: 3 })
+    })
+
+    expect(playerInstance.unloadModule).not.toHaveBeenCalled()
+    expect(playerInstance.setOption).not.toHaveBeenCalled()
   })
 
   it('still starts playback and fires onReady even if unloadModule throws (e.g. an older IFrame API build)', async () => {
@@ -146,6 +229,34 @@ describe('YoutubeLayer', () => {
 
     expect(playerInstance.playVideo).toHaveBeenCalled()
     expect(onReady).toHaveBeenCalledTimes(1)
+    // The two suppression calls are independently guarded — one throwing
+    // must not prevent the other from running.
+    expect(playerInstance.setOption).toHaveBeenCalledWith('captions', 'track', {})
+  })
+
+  it('still starts playback even if setOption throws (e.g. an unsupported IFrame API build)', async () => {
+    const onReady = vi.fn()
+    render(
+      <YoutubeLayer
+        videoId={VIDEO_ID}
+        soundOn={false}
+        volume={0.6}
+        onError={vi.fn()}
+        onReady={onReady}
+        onAudioBlockedChange={vi.fn()}
+      />
+    )
+    await flushMicrotasks()
+
+    playerInstance.setOption.mockImplementation(() => {
+      throw new Error('setOption not supported')
+    })
+
+    fireReady()
+
+    expect(playerInstance.playVideo).toHaveBeenCalled()
+    expect(onReady).toHaveBeenCalledTimes(1)
+    expect(playerInstance.unloadModule).toHaveBeenCalledWith('captions')
   })
 
   it('calls onReady once the player signals it has loaded', async () => {
