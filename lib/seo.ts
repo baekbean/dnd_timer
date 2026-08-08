@@ -1,8 +1,13 @@
 export const SITE_URL = 'https://nooktimer.com'
 export const SITE_NAME = 'NookTimer'
 export const SITE_TITLE = 'NookTimer – Focus Timer for Your Space'
+// Single source for every description surface: root metadata (description, OG,
+// Twitter), the WebApplication JSON-LD, and public/manifest.json (hand-synced —
+// static JSON cannot import). Kept under ~155 chars so Google does not truncate
+// it in the SERP. Leads with the category, then the differentiator competitors
+// cannot claim: no account and no gamification of any kind.
 export const SITE_DESCRIPTION =
-  'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.'
+  'A free online focus timer with calming scenes and ambient sounds. No account, no streaks — just a quiet corner and a countdown that follows you tab to tab.'
 
 export interface FaqItem {
   question: string
@@ -46,7 +51,8 @@ export function webApplicationJsonLd() {
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
-    applicationCategory: 'Productivity',
+    // Must be a schema.org enumeration value — bare 'Productivity' is not one.
+    applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     offers: {

@@ -3,6 +3,7 @@ import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/next'
 import { Reshaped } from 'reshaped'
 import { GA_MEASUREMENT_ID } from '@/lib/ga'
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/seo'
 import './globals.css'
 // Imported as a real ES import (not via @csstools/postcss-global-data —
 // see postcss.config.mjs) so its @custom-media definitions land in
@@ -18,14 +19,16 @@ import 'reshaped/themes/slate/theme.css'
 import 'reshaped/bundle.css'
 import './reshaped-theme.css'
 
+// Every string here reads from lib/seo.ts. These used to be hardcoded literals
+// duplicated across description/openGraph/twitter, which let the SERP snippet,
+// the share card, and the JSON-LD drift apart.
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nooktimer.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'NookTimer – Focus Timer for Your Space',
-    template: '%s | NookTimer',
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
+  description: SITE_DESCRIPTION,
   keywords: [
     'focus timer',
     'pomodoro timer',
@@ -41,22 +44,20 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'NookTimer – Focus Timer for Your Space',
-    description:
-      'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
-    url: 'https://nooktimer.com',
-    siteName: 'NookTimer',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: SITE_NAME,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NookTimer – Focus Timer for Your Space',
-    description:
-      'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
   },
   appleWebApp: {
     capable: true,
-    title: 'NookTimer',
+    title: SITE_NAME,
     statusBarStyle: 'black-translucent',
   },
   icons: {
