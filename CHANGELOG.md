@@ -2,6 +2,15 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.2.0] - 2026-08-08
+
+### Changed
+- Homepage copy now leads with what NookTimer doesn't have — no account, no streaks, no leaderboards — alongside the existing calming-scene and Pomodoro-session description.
+- Search result snippets, social share previews, and the browser tab title now match the homepage copy, instead of three separate hardcoded versions that had drifted apart over time.
+
+### Fixed
+- Fixed a search-engine metadata field that was silently ignored because it used an invalid category value.
+
 ## [0.0.1.11] - 2026-08-05
 
 ### Added

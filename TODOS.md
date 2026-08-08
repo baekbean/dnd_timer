@@ -30,18 +30,6 @@
 
 ## SEO
 
-### Consolidate app/layout.tsx metadata onto lib/seo constants
-
-**What:** Import `SITE_URL`, `SITE_TITLE`, `SITE_DESCRIPTION`, `SITE_NAME` from `lib/seo` in `app/layout.tsx` (metadataBase, title.default, description, openGraph fields) and add a metadata-sync test.
-
-**Why:** The layout still hardcodes the same strings `lib/seo.ts` centralizes. `TimerApp` sets `document.title` from `SITE_TITLE`, so editing either copy alone makes the tab title visibly mutate on first interaction — the same drift class that shipped the stale "Do Not Disturb Timer" branding.
-
-**Context:** Deliberately deferred from the v0.0.1.4 ship because `app/layout.tsx` was being rewritten concurrently by the Reshaped design-system work; touching it mid-flight guaranteed a merge conflict. Do this once that work lands. `app/robots.ts`, `app/sitemap.ts`, and `app/about/page.tsx` already use the constants.
-
-**Effort:** S
-**Priority:** P1
-**Depends on:** Reshaped layout work landing
-
 ### Move the home page h1/SEO section inside the main landmark
 
 **What:** Restructure `app/page.tsx` so `SeoContent`'s `<h1>` and content live inside the page's `<main>` landmark (TimerApp currently renders its own `<main>` and SeoContent is a sibling `<section>`).
@@ -79,3 +67,13 @@
 **Depends on:** None
 
 ## Completed
+
+### Consolidate app/layout.tsx metadata onto lib/seo constants
+
+**What:** Import `SITE_URL`, `SITE_TITLE`, `SITE_DESCRIPTION`, `SITE_NAME` from `lib/seo` in `app/layout.tsx` (metadataBase, title.default, description, openGraph fields) and add a metadata-sync test.
+
+**Why:** The layout still hardcodes the same strings `lib/seo.ts` centralizes. `TimerApp` sets `document.title` from `SITE_TITLE`, so editing either copy alone makes the tab title visibly mutate on first interaction — the same drift class that shipped the stale "Do Not Disturb Timer" branding.
+
+**Context:** Deliberately deferred from the v0.0.1.4 ship because `app/layout.tsx` was being rewritten concurrently by the Reshaped design-system work; touching it mid-flight guaranteed a merge conflict. `app/robots.ts`, `app/sitemap.ts`, and `app/about/page.tsx` already used the constants.
+
+**Completed:** v0.0.2.0 (2026-08-08)
