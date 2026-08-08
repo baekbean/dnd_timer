@@ -34,6 +34,11 @@ Key routing rules:
 - See `EVENTS.md` for the full catalog of tracked events (what fires them, params, destinations, call sites).
 - When adding, renaming, or changing the params of a tracked event, update `EVENTS.md` in the same change.
 
+## SEO
+
+- `lib/seo.ts` is the single source of truth for `SITE_URL`/`SITE_NAME`/`SITE_TITLE`/`SITE_DESCRIPTION` and the `WebApplication` JSON-LD. `app/layout.tsx`'s metadata (title, description, OpenGraph, Twitter) imports from it — don't hardcode these strings again. `public/manifest.json`'s `description` is hand-synced to `SITE_DESCRIPTION` (static JSON can't import) — update it in the same change if the constant changes.
+- `docs/launch-copy.md` has reference copy for outbound launch/backlink posts (Product Hunt, Reddit, directories) from the SEO/GEO audit — nothing there posts automatically.
+
 ## Figma design system
 
 - The code's design tokens (`app/reshaped-theme.css` colors/radius/shadows, `app/globals.css` `@theme` font families) are mirrored as Figma Variables/Styles in the `DnD-Landing-Page` file (fileKey `yDTZbfcrkLop7ssCwZzgwG`): `Color` collection (26 vars), `Radius` collection (3 vars), `Font` collection (6 STRING vars), plus 6 `Shadow/*` effect styles. Every variable carries a WEB code syntax pointing at its real CSS custom property (e.g. `var(--rs-color-background-primary)`).
