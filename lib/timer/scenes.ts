@@ -37,7 +37,7 @@ export const SCENES: Scene[] = [
     video: {
       webm: '/images/timer-bg.webm',
       mp4: '/images/timer-bg.mp4',
-      poster: '/images/timer-bg.png',
+      poster: '/images/timer-bg.jpg',
     },
     fallbackGradient: 'linear-gradient(160deg, #5c6b57 0%, #74856E 55%, #8a9a83 100%)',
     overlay: 'rgba(116, 133, 110, 0.3)',
