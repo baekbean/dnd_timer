@@ -5,7 +5,7 @@ import { FAQ_ITEMS } from '@/lib/seo'
 const FEATURES = [
   {
     title: 'Scenes that feel like your space',
-    body: 'Choose a calming scene — a sunlit meadow, a quiet dusk, a still night — and let the timer fade into the background of your workspace instead of shouting for attention.',
+    body: "Choose one of NookTimer's calming scenes, or paste any YouTube video to create your own focus background.",
   },
   {
     title: 'Ambient sound that keeps you in flow',

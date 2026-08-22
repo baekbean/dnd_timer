@@ -1,10 +1,9 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { track } from '@vercel/analytics'
-import { buildFormUrl, submitEmailSilently } from '@/lib/constants'
-import { trackWaitlistClick } from '@/lib/ga'
+import { trackStartFocusingClick } from '@/lib/ga'
 import SectionTracker from '@/components/SectionTracker'
 import posthog from 'posthog-js'
 
@@ -185,20 +184,6 @@ function HeroTimerCard() {
 }
 
 export default function Hero() {
-  const [email, setEmail] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    track('join_waitlist', { location: 'hero', email })
-    trackWaitlistClick({ button_location: 'hero', button_text: 'Join waitlist' })
-    posthog.capture('waitlist_click', { button_location: 'hero', button_text: 'Join waitlist' })
-    submitEmailSilently(email)
-    const url = buildFormUrl(email)
-    if (url !== '#') {
-      window.open(url, '_blank', 'noopener,noreferrer')
-    }
-  }
-
   return (
     <section className="relative w-full overflow-hidden bg-[#F6F6F3]">
       <SectionTracker sectionName="hero" />
@@ -220,7 +205,7 @@ export default function Hero() {
           <HeroTimerCard />
         </div>
 
-        {/* Email signup */}
+        {/* Product CTA */}
         <div className="flex flex-col items-center gap-[40px] w-full px-4 md:px-0">
           <div className="flex flex-col gap-4 items-center text-center">
             <h1 className="font-aspekta uppercase text-[28px] md:text-[40px] leading-[1.3] text-[#343434]">
@@ -232,24 +217,16 @@ export default function Hero() {
             </p>
           </div>
 
-          <form
-            onSubmit={handleSubmit}
-            className="flex items-center gap-4 bg-white pl-6 pr-2 py-2 rounded-full shadow-[0px_0px_4px_rgba(0,0,0,0.1),0px_0px_2px_rgba(0,0,0,0.05)] w-full max-w-[572px]"
+          <Link
+            href="/"
+            onClick={() => {
+              trackStartFocusingClick({ button_location: 'about_hero' })
+              posthog.capture('start_focusing_click', { button_location: 'about_hero' })
+            }}
+            className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[28px] py-[14px] rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
           >
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="flex-1 min-w-0 font-pretendard text-[16px] text-[#343434] tracking-[-0.08px] leading-[1.4] bg-transparent outline-none placeholder:text-[#343434]/40"
-            />
-            <button
-              type="submit"
-              className="bg-[#343434] text-[#F6F6F3] font-dm font-bold text-[14px] tracking-[-0.35px] leading-[1.4] px-[22px] py-[14px] rounded-full whitespace-nowrap w-[200px] transition-opacity hover:opacity-80"
-            >
-              Join waitlist
-            </button>
-          </form>
+            Start focusing
+          </Link>
         </div>
       </div>
     </section>

@@ -21,6 +21,7 @@ describe('webApplicationJsonLd', () => {
     expect(jsonLd['@context']).toBe('https://schema.org')
     expect(jsonLd['@type']).toBe('WebApplication')
     expect(jsonLd.name).toBe(SITE_NAME)
+    expect(jsonLd).not.toHaveProperty('alternateName')
     expect(jsonLd.url).toBe(SITE_URL)
     expect(jsonLd.offers.price).toBe('0')
   })
@@ -72,6 +73,15 @@ describe('faqJsonLd', () => {
       expect(entity.acceptedAnswer.text).toBe(FAQ_ITEMS[i].answer)
     })
   })
+
+  it('answers the custom-background query instead of promising future scenes', () => {
+    const item = FAQ_ITEMS.find(({ question }) => question === 'Can I use my own background?')
+
+    expect(item?.answer).toBe(
+      "Yes. You can paste any YouTube link and use the video as your focus background, or choose one of NookTimer's built-in calming scenes."
+    )
+    expect(FAQ_ITEMS.some(({ question }) => question === 'Can I change the scenes and sounds?')).toBe(false)
+  })
 })
 
 describe('serializeJsonLd', () => {
@@ -96,6 +106,11 @@ describe('SeoContent', () => {
   it('surfaces the no-account/no-streaks differentiator in the hero copy', () => {
     render(<SeoContent />)
     expect(screen.getByText(/no account, no\s*streaks/i)).toBeTruthy()
+  })
+
+  it('surfaces the custom YouTube background differentiator', () => {
+    render(<SeoContent />)
+    expect(screen.getByText(/paste any YouTube video to create your own focus background/i)).toBeTruthy()
   })
 
   it('renders every FAQ question so JSON-LD matches on-page text', () => {

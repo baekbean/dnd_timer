@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { SITE_NAME } from '@/lib/seo'
 
 const socialLinks = [
   { label: 'TikTok', href: 'https://www.tiktok.com/@hellodndroom' },
@@ -37,7 +38,7 @@ export default function Footer({ showSocialLinks = true }: Props = {}) {
         {/* Copyright */}
         <div className="flex-1">
           <p className="font-mono text-[12px] text-[#343434] tracking-[-0.12px] leading-[1.4]">
-            © 2026 Nook Timer
+            © 2026 {SITE_NAME}
           </p>
         </div>
 

@@ -8,7 +8,7 @@ Three destinations:
 
 - **GA4**, via a `trackX(params)` function in `lib/ga.ts`. Each one calls the shared `gtagEvent(name, params)` helper, which retries for 5s if `gtag` hasn't loaded yet (`afterInteractive` race) and auto-injects `page_path`.
 - **PostHog**, via `posthog.capture('event_name', params)` called directly at the same call site — there is no shared wrapper for this one.
-- **Vercel Analytics**, via `track('event_name', params)` from `@vercel/analytics` — used only for `join_waitlist` on the marketing landing page (`Hero.tsx`, `Nav.tsx`, `Section3.tsx`), not anywhere in the timer app itself.
+- **Vercel Analytics**, available via `track('event_name', params)` from `@vercel/analytics`; the current product CTAs use the GA4 and PostHog paths below.
 
 **Convention for a new tracked interaction:**
 1. Add a `trackX(params)` function to `lib/ga.ts` in the relevant `// ── section ──` block, with a one-line comment above it saying when it fires.
@@ -96,8 +96,7 @@ Same `getHandoffContext()` blob auto-injected on all of these.
 
 | Event | Fires when | Params | Destinations | Where |
 |---|---|---|---|---|---|
-| `join_waitlist` / `waitlist_click` | The waitlist form is submitted | `button_location` (`hero`\|`cta`), `button_text`, `email` (Vercel only) | Vercel Analytics + GA4 + PostHog | Hero.tsx, Section3.tsx |
-| `start_focusing_click` | A "Start focusing" CTA is clicked, linking straight to `/` | `button_location` (`nav`\|`blog_post_callout`\|`blog_post_end_cta`) | GA4 + PostHog | Nav.tsx, components/blog/BlogCallout.tsx, components/blog/BlogEndCta.tsx |
+| `start_focusing_click` | A "Start focusing" CTA is clicked, linking straight to `/` | `button_location` (`nav`\|`about_hero`\|`about_cta`\|`blog_post_callout`\|`blog_post_end_cta`) | GA4 + PostHog | Nav.tsx, Hero.tsx, Section3.tsx, components/blog/BlogCallout.tsx, components/blog/BlogEndCta.tsx |
 | `section_view` | A landing-page section scrolls into view (fires once per session) | `section_name` (`hero`\|`features`\|`workspace_images`\|`cta`) | GA4 | SectionTracker.tsx |
 
 ## Experimental routes

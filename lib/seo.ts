@@ -33,9 +33,9 @@ export const FAQ_ITEMS: FaqItem[] = [
       'Absolutely. Many people use NookTimer for study-with-me style sessions. Pick a calming scene, turn on the ambient sound layer, and set a session cycle that matches your study plan.',
   },
   {
-    question: 'Can I change the scenes and sounds?',
+    question: 'Can I use my own background?',
     answer:
-      'Yes. NookTimer ships with a set of calming scenes — like Meadow, Dusk, and Night — plus an ambient sound layer you can toggle to match the mood. More scenes and sounds are on the way.',
+      "Yes. You can paste any YouTube link and use the video as your focus background, or choose one of NookTimer's built-in calming scenes.",
   },
   {
     question: 'Does the timer keep running in the background?',
