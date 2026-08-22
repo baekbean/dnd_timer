@@ -2,6 +2,22 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.2.0] - 2026-08-22
+
+### Added
+- Added three independent focus guides covering focus-environment design, tab-title countdowns, and custom YouTube backgrounds, each with crawlable metadata and structured data.
+- Added `/llms.txt`, generated from the same canonical site, FAQ, blog, and update sources used elsewhere, so AI crawlers receive a current map of NookTimer content.
+
+### Changed
+- Homepage copy now leads with what NookTimer doesn't have — no account, no streaks, no leaderboards — alongside the existing calming-scene and Pomodoro-session description.
+- Homepage feature copy and FAQ now clearly explain that any YouTube video can be used as a custom focus background.
+- The About page now sends visitors straight into the live timer instead of asking them to join a waitlist for a product that is already available.
+- Footer branding now consistently uses `NookTimer`; page keywords and the sitemap were refreshed around the product's strongest search intents.
+- Search result snippets, social share previews, and the browser tab title now match the homepage copy, instead of three separate hardcoded versions that had drifted apart over time.
+
+### Fixed
+- Fixed a search-engine metadata field that was silently ignored because it used an invalid category value.
+
 ## [0.0.1.11] - 2026-08-05
 
 ### Added

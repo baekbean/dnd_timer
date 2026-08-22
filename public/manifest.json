@@ -1,7 +1,7 @@
 {
   "name": "NookTimer",
   "short_name": "NookTimer",
-  "description": "An online focus timer that fits naturally into your workspace.",
+  "description": "A free online focus timer with calming scenes and ambient sounds. No account, no streaks — just a quiet corner and a countdown that follows you tab to tab.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1c1c1c",

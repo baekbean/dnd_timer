@@ -4,6 +4,7 @@ import BlogPage from '@/app/blog/page'
 import BlogPostPage, { generateMetadata, generateStaticParams } from '@/app/blog/[slug]/page'
 import { FEEDBACK_FORM_URL } from '@/lib/constants'
 import { blogPostingJsonLd, faqPageJsonLd } from '@/lib/seo'
+import * as blogModule from '@/lib/blog'
 import { BLOG_POSTS, getBlogPost, type BlogBlock } from '@/lib/blog'
 
 vi.mock('@/lib/ga', () => ({
@@ -102,8 +103,19 @@ describe('BlogPostPage', () => {
     expect(metadata).toEqual({})
   })
 
-  it('renders nothing for "Read next" when there is only one post', async () => {
-    expect(BLOG_POSTS).toHaveLength(1)
+  it('renders "Read next" linking to another post when one exists', async () => {
+    expect(BLOG_POSTS.length).toBeGreaterThan(1)
+    const otherPost = BLOG_POSTS.find((p) => p.slug !== post.slug)!
+    const element = await BlogPostPage({ params: Promise.resolve({ slug: post.slug }) })
+    render(element)
+
+    expect(screen.getByRole('heading', { name: /read next/i })).toBeTruthy()
+    const link = screen.getByRole('link', { name: otherPost.title })
+    expect(link.getAttribute('href')).toBe(`/blog/${otherPost.slug}`)
+  })
+
+  it('renders nothing for "Read next" when there are no other posts', async () => {
+    vi.spyOn(blogModule, 'sortedBlogPosts').mockReturnValueOnce([post])
     const element = await BlogPostPage({ params: Promise.resolve({ slug: post.slug }) })
     render(element)
 

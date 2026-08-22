@@ -1,8 +1,13 @@
 export const SITE_URL = 'https://nooktimer.com'
 export const SITE_NAME = 'NookTimer'
 export const SITE_TITLE = 'NookTimer – Focus Timer for Your Space'
+// Single source for every description surface: root metadata (description, OG,
+// Twitter), the WebApplication JSON-LD, and public/manifest.json (hand-synced —
+// static JSON cannot import). Kept under ~155 chars so Google does not truncate
+// it in the SERP. Leads with the category, then the differentiator competitors
+// cannot claim: no account and no gamification of any kind.
 export const SITE_DESCRIPTION =
-  'An online focus timer that fits naturally into your workspace. Stay focused with calming scenes, ambient sounds, and a distraction-free experience.'
+  'A free online focus timer with calming scenes and ambient sounds. No account, no streaks — just a quiet corner and a countdown that follows you tab to tab.'
 
 export interface FaqItem {
   question: string
@@ -28,9 +33,9 @@ export const FAQ_ITEMS: FaqItem[] = [
       'Absolutely. Many people use NookTimer for study-with-me style sessions. Pick a calming scene, turn on the ambient sound layer, and set a session cycle that matches your study plan.',
   },
   {
-    question: 'Can I change the scenes and sounds?',
+    question: 'Can I use my own background?',
     answer:
-      'Yes. NookTimer ships with a set of calming scenes — like Meadow, Dusk, and Night — plus an ambient sound layer you can toggle to match the mood. More scenes and sounds are on the way.',
+      "Yes. You can paste any YouTube link and use the video as your focus background, or choose one of NookTimer's built-in calming scenes.",
   },
   {
     question: 'Does the timer keep running in the background?',
@@ -46,7 +51,8 @@ export function webApplicationJsonLd() {
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
-    applicationCategory: 'Productivity',
+    // Must be a schema.org enumeration value — bare 'Productivity' is not one.
+    applicationCategory: 'ProductivityApplication',
     operatingSystem: 'Any',
     browserRequirements: 'Requires a modern web browser with JavaScript enabled.',
     offers: {

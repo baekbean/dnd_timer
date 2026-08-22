@@ -5,7 +5,7 @@ import { FAQ_ITEMS } from '@/lib/seo'
 const FEATURES = [
   {
     title: 'Scenes that feel like your space',
-    body: 'Choose a calming scene — a sunlit meadow, a quiet dusk, a still night — and let the timer fade into the background of your workspace instead of shouting for attention.',
+    body: "Choose one of NookTimer's calming scenes, or paste any YouTube video to create your own focus background.",
   },
   {
     title: 'Ambient sound that keeps you in flow',
@@ -29,14 +29,17 @@ export default function SeoContent() {
       <div className="mx-auto flex max-w-[720px] flex-col gap-16">
         <header className="flex flex-col gap-4">
           <h1 className="font-aspekta text-[26px] uppercase leading-[1.3] text-[#f5f5f5] md:text-[32px]">
-            A calm online focus timer for deep work and study
+            A calm online focus timer for deep work and study — no account, no
+            streaks
           </h1>
           <p className="text-[16px] leading-[1.7]">
             NookTimer is a free focus timer that runs right in your browser — no
-            download, no account. Instead of a bare countdown, it gives you a
-            quiet corner: calming scenes, ambient sounds, and a Pomodoro-style
-            session flow designed to help you stay with your work, whether
-            that&apos;s deep work, studying, reading, or writing.
+            download, no account. There are no streaks, badges, or leaderboards
+            either: skip a day and nothing is lost. Instead of a bare countdown,
+            it gives you a quiet corner — calming scenes, ambient sound, and a
+            Pomodoro-style session flow — with the time remaining in your tab
+            title, whether you&apos;re doing deep work, studying, reading, or
+            writing.
           </p>
         </header>
 
