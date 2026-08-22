@@ -36,7 +36,7 @@ Key routing rules:
 
 ## SEO
 
-- `lib/seo.ts` is the single source of truth for `SITE_URL`/`SITE_NAME`/`SITE_TITLE`/`SITE_DESCRIPTION` and the `WebApplication` JSON-LD. `app/layout.tsx`'s metadata (title, description, OpenGraph, Twitter) imports from it — don't hardcode these strings again. `public/manifest.json`'s `description` is hand-synced to `SITE_DESCRIPTION` (static JSON can't import) — update it in the same change if the constant changes.
+- `lib/seo.ts` is the single source of truth for `SITE_URL`/`SITE_NAME`/`SITE_TITLE`/`SITE_DESCRIPTION` and the `WebApplication` JSON-LD. `app/layout.tsx`'s metadata (title, description, OpenGraph, Twitter) and `app/llms.txt/route.ts` import from it — don't hardcode these strings again. `public/manifest.json`'s `description` is hand-synced to `SITE_DESCRIPTION` (static JSON can't import) — update it in the same change if the constant changes.
 - `docs/launch-copy.md` has reference copy for outbound launch/backlink posts (Product Hunt, Reddit, directories) from the SEO/GEO audit — nothing there posts automatically.
 
 ## Figma design system

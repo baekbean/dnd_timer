@@ -42,18 +42,6 @@
 **Priority:** P2
 **Depends on:** Sound/Reshaped TimerApp work landing
 
-### Strengthen SEO copy once ambient sounds and custom scenes ship
-
-**What:** Re-add rain/birdsong ambience and bring-your-own-YouTube-scene claims to `lib/seo.ts` FAQ items and `SeoContent` feature copy, and bump the sitemap dates.
-
-**Why:** The v0.0.1.4 copy deliberately claims only live features (production ambient is a synthesized placeholder; custom scenes are unreleased). Once the sound/YouTube feature deploys, richer copy targets stronger long-tail keywords ("rain sounds focus timer").
-
-**Context:** The original stronger copy exists in the v0.0.1.4 branch history (`bc022f1`, reworded in `c7b6c9e`). One-line-per-claim restoration plus FAQ wording.
-
-**Effort:** S
-**Priority:** P2
-**Depends on:** Sound panel + custom YouTube scene feature deploying to production
-
 ### og:image doesn't cascade to nested static routes
 
 **What:** `/about` and `/updates/*` don't inherit `app/opengraph-image.jpg` as their `og:image` the way the Next.js metadata-file docs describe for a root-level static image — only `/` gets it. Investigate whether nested static/non-dynamic routes need explicit `openGraph.images` in their own metadata, or whether the convention genuinely doesn't cascade past the segment it's colocated with.
@@ -67,6 +55,14 @@
 **Depends on:** None
 
 ## Completed
+
+### Strengthen SEO copy once ambient sounds and custom scenes ship
+
+**What:** Re-add bring-your-own-YouTube-scene claims to `lib/seo.ts` FAQ items and `SeoContent` feature copy, and bump the sitemap date.
+
+**Why:** The richer copy targets stronger long-tail searches now that the feature is live.
+
+**Completed:** v0.0.2.0 (2026-08-22)
 
 ### Consolidate app/layout.tsx metadata onto lib/seo constants
 
