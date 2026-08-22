@@ -2,6 +2,11 @@
 
 All notable changes to NookTimer (formerly DnD Timer) are documented here.
 
+## [0.0.2.1] - 2026-08-22
+
+### Fixed
+- Search crawlers now see only the meaningful NookTimer logo image in the footer, while the decorative texture remains visually intact without triggering a missing-alt warning.
+
 ## [0.0.2.0] - 2026-08-22
 
 ### Added
