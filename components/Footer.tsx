@@ -18,11 +18,10 @@ export default function Footer({ showSocialLinks = true }: Props = {}) {
   return (
     <footer className="relative w-full pt-[40px] pb-[100px] px-4 md:px-10 overflow-hidden">
       {/* Background texture */}
-      <Image
-        src="/images/footer-bg.png"
-        alt=""
-        fill
-        className="object-cover pointer-events-none"
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-cover bg-center pointer-events-none"
+        style={{ backgroundImage: "url('/images/footer-bg.avif')" }}
       />
 
       <div className="relative flex items-end gap-10 w-full">
