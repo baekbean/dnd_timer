@@ -28,18 +28,23 @@ export interface BlogPost {
 export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'how-to-use-the-pomodoro-technique',
-    title: 'How to use the Pomodoro Technique',
-    date: '2026-08-05',
+    title: 'How to Do the Pomodoro Technique: A Step-by-Step Guide',
+    date: '2026-08-25',
     tag: 'Focus',
-    readTime: '5 min read',
+    readTime: '9 min read',
     excerpt:
-      "Starting is the hardest part. Here's how to run 25/5 and 50/10 focus sessions — and adjust them — without turning your routine into another complicated system.",
+      'Learn how to do the Pomodoro Technique step by step, handle interruptions, plan breaks, and adjust 25/5 sessions to fit the way you focus.',
     lede: [
-      'Starting is often the hardest part of getting anything done.',
-      'A task can feel too large, your attention can feel scattered, or you may simply not be in the mood to focus. The Pomodoro Technique makes beginning feel more manageable by asking you to focus for a limited period instead of finishing everything at once.',
-      'Here’s how to try it without turning your focus routine into another complicated system.',
+      'You sit down to work, open the document, and suddenly remember three messages you should answer. A few minutes later, you are reorganizing your tabs instead of starting the task.',
+      'The Pomodoro Technique gives that messy beginning a simple shape: choose one task, work for a defined period, then stop for a real break. The familiar version uses 25 minutes of focus followed by 5 minutes of rest. But the method is not only a timer setting. It also includes planning what you will do, protecting the session from interruptions, and keeping track of what you finish.',
+      'Here is how to do the Pomodoro Technique from start to finish — and how to adapt it without losing what makes it useful.',
     ],
     blocks: [
+      { type: 'heading', level: 'h2', text: 'The Pomodoro Technique in six steps' },
+      {
+        type: 'paragraph',
+        text: 'If you want to start immediately, follow these steps:',
+      },
       {
         type: 'callout',
         icon: '🍅',
@@ -47,82 +52,183 @@ export const BLOG_POSTS: BlogPost[] = [
         steps: [
           'Choose one specific task.',
           'Set a timer for 25 minutes.',
-          'Focus on that task until the timer ends.',
+          'Work only on that task until the timer rings.',
+          'Record the completed focus session.',
           'Take a 5-minute break.',
-          'Repeat four times, then take a longer 15–30 minute break.',
+          'After four sessions, take a longer 15- to 30-minute break.',
         ],
         ctaText: 'Start a 25-minute focus session →',
         ctaHref: '/',
       },
-      { type: 'heading', level: 'h2', text: 'What is the Pomodoro Technique?' },
       {
         type: 'paragraph',
-        text: 'The Pomodoro Technique is a time-management method that divides work into focused sessions and breaks. Instead of measuring progress only by whether you finish a task, you commit to working on it for one defined session.',
+        text: 'That is the basic cycle. The details below make it easier to use when your task is vague, your phone keeps pulling you away, or 25 minutes does not feel right.',
+      },
+      { type: 'heading', level: 'h2', text: 'What counts as a Pomodoro?' },
+      {
+        type: 'paragraph',
+        text: 'A Pomodoro is one protected focus session with a clear start and finish. Traditionally, it lasts 25 minutes. During that time, you work on the task you chose rather than switching between unrelated activities.',
       },
       {
         type: 'paragraph',
-        text: 'This structure can make breaks more deliberate and give an overwhelming task a clearer place to begin.',
+        text: 'The timer is only one part of the system. The official Pomodoro Technique overview also emphasizes daily planning, managing interruptions, and estimating effort. Those parts matter because a countdown cannot decide what deserves your attention or what to do when a distraction appears.',
       },
       {
         type: 'paragraph',
-        text: 'Research has not shown that fixed Pomodoro breaks are consistently better than taking breaks based on your own fatigue and attention. Think of 25/5 as a useful starting point, then adjust it based on how you actually work.',
+        text: 'Think of the method as a small agreement with yourself: for this one session, this one task is enough.',
       },
-      { type: 'heading', level: 'h2', text: 'Do you have to use 25/5?' },
+      { type: 'heading', level: 'h2', text: 'Step 1: Choose a task with a visible finish line' },
       {
         type: 'paragraph',
-        text: 'The traditional Pomodoro interval is 25 minutes of focus followed by a 5-minute break, but you do not have to treat it as a rigid rule.',
+        text: '“Work on the presentation” is too broad. You may spend the first ten minutes deciding where to begin. Make the task small enough that the next action is obvious:',
       },
+      { type: 'paragraph', text: '• Draft the opening slide.' },
+      { type: 'paragraph', text: '• Find three sources for the introduction.' },
+      { type: 'paragraph', text: '• Review pages 1–5 and leave comments.' },
+      { type: 'paragraph', text: '• Answer the five messages marked urgent.' },
       {
         type: 'paragraph',
-        text: 'You might begin with 25/5 when a shorter commitment feels easier to approach. You may prefer 50 minutes of focus followed by a 10-minute break when shorter intervals interrupt your flow. If 25 minutes feels overwhelming, start with 10 or 15.',
-      },
-      {
-        type: 'paragraph',
-        text: 'These are options to test, not scientifically proven matches for particular types of work. Notice how each interval affects your attention, fatigue, and momentum. If you’re unsure, start with 25 minutes and adjust from there.',
-      },
-      { type: 'heading', level: 'h2', text: 'How to begin your first Pomodoro' },
-      { type: 'heading', level: 'h3', text: '1. Pick one specific task' },
-      {
-        type: 'paragraph',
-        text: '“Study” is broad. “Review chapter three” gives your attention somewhere to go. Choose something clear enough that you can begin without making another decision.',
-      },
-      { type: 'heading', level: 'h3', text: '2. Prepare your environment' },
-      {
-        type: 'paragraph',
-        text: 'Close the tabs you don’t need. Put your phone out of reach. Keep the materials for your task nearby.',
+        text: 'For a large project, write down the next concrete action and make a rough estimate of how many sessions it may take. Your estimate does not need to be accurate. Comparing it with the actual number of sessions will gradually help you plan more realistically.',
       },
       {
         type: 'paragraph',
-        text: 'Your digital environment is part of the setup too. A calm background or steady ambient sound may help some people settle in, but responses to background audio vary by person and task. If you use sound, choose something that does not repeatedly pull your attention away.',
+        text: 'If a task will take less than one session, combine it with similar small tasks. If it will take several sessions, divide it into checkpoints that let you see progress.',
       },
-      { type: 'heading', level: 'h3', text: '3. Start the timer' },
+      { type: 'heading', level: 'h2', text: 'Step 2: Prepare the environment before starting' },
       {
         type: 'paragraph',
-        text: 'Once the timer begins, stay with your chosen task until the session ends. If you remember something unrelated, write it down and return to it later. You don’t have to follow every thought the moment it appears.',
-      },
-      { type: 'heading', level: 'h3', text: '4. Take a real break' },
-      {
-        type: 'paragraph',
-        text: 'Stand up, stretch, refill your water, or look away from your screen.',
+        text: 'Use the minute before the timer begins to remove predictable friction. Open the file you need, close unrelated tabs, place water nearby, and silence notifications. If your phone is not part of the task, put it out of reach.',
       },
       {
         type: 'paragraph',
-        text: 'Planned breaks can support recovery, but their effects depend on the task, timing, and person. Treat the break as a chance to check what leaves you feeling ready for the next session.',
-      },
-      { type: 'heading', level: 'h3', text: '5. Adjust the routine' },
-      { type: 'paragraph', text: 'The Pomodoro Technique is a framework, not a rule.' },
-      {
-        type: 'paragraph',
-        text: 'If 25 minutes feels too short, try 50. If your concentration fades sooner, begin with 15. A useful routine is one you can return to and adapt based on your experience.',
-      },
-      { type: 'heading', level: 'h2', text: 'Make focusing easier to return to' },
-      {
-        type: 'paragraph',
-        text: 'A timer can tell you when to work and when to rest. The environment around it can also make a focus routine feel easier to return to.',
+        text: 'This preparation is not a separate productivity ritual that has to be perfect. It is simply a way to make the desired action easier than the distraction.',
       },
       {
         type: 'paragraph',
-        text: 'NookTimer gives you a calm, ready-made focus space or lets you turn a favorite YouTube video into your background.',
+        text: 'Your surroundings can also become a start cue. Using the same desk, ambient sound, or background for focus sessions gives your brain a consistent signal: this is where the task begins. NookTimer lets you combine a focus timer with calm visual backgrounds and ambient sound, so your workspace can support the transition into focus without adding more setup.',
+      },
+      { type: 'heading', level: 'h2', text: 'Step 3: Set the timer and work on one task' },
+      {
+        type: 'paragraph',
+        text: 'Set a 25-minute timer and begin the specific action you wrote down. Do not wait to feel fully ready. The session is short enough that you only need to agree to begin — not to finish the entire project.',
+      },
+      { type: 'paragraph', text: 'While the timer is running:' },
+      { type: 'paragraph', text: '• Keep only the materials needed for the task in view.' },
+      { type: 'paragraph', text: '• Avoid checking progress every few minutes.' },
+      { type: 'paragraph', text: '• Do not add new tasks to the session just because they are quick.' },
+      { type: 'paragraph', text: '• If you finish early, review the work or prepare the next related action.' },
+      {
+        type: 'paragraph',
+        text: 'The goal is not to create 25 flawless minutes. It is to make returning to the chosen task the default.',
+      },
+      { type: 'heading', level: 'h2', text: 'Step 4: Handle interruptions without following them' },
+      {
+        type: 'paragraph',
+        text: 'Interruptions can come from outside — an alert, message, or question — or from inside, such as remembering an errand or wanting to look something up.',
+      },
+      {
+        type: 'paragraph',
+        text: 'When an internal interruption appears, write it in a small “later” list and return to the task. Capturing it tells your brain that the thought will not be lost. You can decide what to do with it after the session.',
+      },
+      {
+        type: 'paragraph',
+        text: 'For external interruptions, protect the session when you reasonably can. A short response such as “I’m in the middle of something; can I come back to you in 20 minutes?” creates a boundary without ignoring the person. If the interruption is genuinely urgent, stop and restart the session later rather than pretending the remaining time was focused.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Repeated interruptions are useful information. If the same app, person, or thought breaks several sessions, change the environment before the next one instead of relying on willpower.',
+      },
+      { type: 'heading', level: 'h2', text: 'Step 5: Take a break that feels different from work' },
+      {
+        type: 'paragraph',
+        text: 'When the timer rings, stop and step away for about five minutes. A useful break changes your physical position or type of attention. You might:',
+      },
+      { type: 'paragraph', text: '• Stand and stretch.' },
+      { type: 'paragraph', text: '• Refill your water.' },
+      { type: 'paragraph', text: '• Look out a window.' },
+      { type: 'paragraph', text: '• Walk to another room.' },
+      { type: 'paragraph', text: '• Rest your eyes and breathe slowly.' },
+      {
+        type: 'paragraph',
+        text: 'Opening social media can turn a five-minute break into a longer distraction, and it keeps your attention attached to another stream of information. If possible, choose something with a natural ending.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Research supports a measured view of short breaks. A 2022 meta-analysis of 22 independent samples found that micro-breaks were associated with small improvements in vigor and fatigue, while the overall effect on performance was not statistically significant. In other words, a short break can help you recover, but it is not a magic performance switch.',
+      },
+      { type: 'heading', level: 'h2', text: 'Step 6: Record the session, then repeat' },
+      {
+        type: 'paragraph',
+        text: 'Mark one completed session beside the task. This tiny record gives you a visible measure of effort even when the final result is still far away.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Then begin another focus session. After four Pomodoros, take a longer break of 15 to 30 minutes. Eat something, walk, or move away from the workspace long enough to reset before the next cycle.',
+      },
+      { type: 'paragraph', text: 'At the end of the day, review your marks. Ask:' },
+      { type: 'paragraph', text: '• Which tasks took more or fewer sessions than expected?' },
+      { type: 'paragraph', text: '• What interrupted me most often?' },
+      { type: 'paragraph', text: '• At what time did focus feel easiest?' },
+      { type: 'paragraph', text: '• Was my work interval too short, too long, or about right?' },
+      {
+        type: 'paragraph',
+        text: 'Use the answers to make tomorrow’s plan more realistic.',
+      },
+      {
+        type: 'heading',
+        level: 'h2',
+        text: 'Do you have to use 25 minutes of work and 5 minutes of rest?',
+      },
+      {
+        type: 'paragraph',
+        text: 'No. The 25/5 pattern is a practical starting point, not a rule that fits every person and task.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Try a shorter session, such as 10 or 15 minutes, when starting feels unusually difficult. Try 50 minutes of focus followed by a 10-minute break when you are already absorbed in demanding work and frequent stops feel disruptive. Keep the three essential parts: one defined task, protected focus time, and a deliberate break.',
+      },
+      {
+        type: 'paragraph',
+        text: 'There is no strong evidence that one fixed interval is universally best. In a 2023 real-world study of 87 university students, groups using predetermined breaks followed either a 24/6 or 12/3 pattern. Compared with students who chose their own breaks, the predetermined-break groups reported different patterns of fatigue, concentration, and motivation, but the groups did not differ in task completion. Because the study observed a single day of self-study, it should not be treated as a final answer for every kind of work.',
+      },
+      {
+        type: 'paragraph',
+        text: 'Choose an interval that is long enough to make progress but short enough that you are willing to begin. Use it for several sessions before changing it again, so you can judge the pattern rather than one unusually good or bad day.',
+      },
+      { type: 'heading', level: 'h2', text: 'Common Pomodoro mistakes' },
+      { type: 'heading', level: 'h3', text: 'Choosing a vague task' },
+      {
+        type: 'paragraph',
+        text: 'If the task is “study” or “work on the website,” you still have to decide what to do after the timer starts. Define the first physical action before you begin.',
+      },
+      { type: 'heading', level: 'h3', text: 'Treating every thought as urgent' },
+      {
+        type: 'paragraph',
+        text: 'Most remembered tasks can wait 25 minutes. Keep a capture list beside you so you can record the thought without acting on it.',
+      },
+      { type: 'heading', level: 'h3', text: 'Using the break for more input' },
+      {
+        type: 'paragraph',
+        text: 'Email, news, and short videos can leave your attention more scattered. Choose a break that reduces stimulation or changes your physical state.',
+      },
+      { type: 'heading', level: 'h3', text: 'Pausing the timer repeatedly' },
+      {
+        type: 'paragraph',
+        text: 'A session that is paused every few minutes loses its boundary. For an unavoidable interruption, restart when you can protect a fresh interval.',
+      },
+      { type: 'heading', level: 'h3', text: 'Working through every break' },
+      {
+        type: 'paragraph',
+        text: 'Routinely skipping breaks turns the method into an ordinary countdown.',
+      },
+      { type: 'heading', level: 'h2', text: 'Make your first session easy to start' },
+      {
+        type: 'paragraph',
+        text: 'The Pomodoro Technique works best as a repeatable way to begin, not a test of discipline. Choose one clear action, create a calm environment, and protect a single interval. Then take the break you planned.',
+      },
+      {
+        type: 'paragraph',
+        text: 'With NookTimer, you can choose a 25/5 or 50/10 rhythm, add ambient sound and a visual background, and turn the same workspace into a familiar focus cue. Set up your space, name the first small task, and begin one session. You can improve the system after the timer rings.',
       },
       {
         type: 'faq',
@@ -130,28 +236,33 @@ export const BLOG_POSTS: BlogPost[] = [
           {
             question: 'How many Pomodoros should I do before a long break?',
             answer:
-              'The traditional method uses four 25-minute focus sessions before a longer 15–30 minute break. Adjust this if you feel tired sooner or want to continue a productive flow.',
+              'The traditional pattern is four focus sessions followed by a 15- to 30-minute break. Adjust sooner if your energy or task requires it.',
           },
           {
-            question: 'What should I do during a Pomodoro break?',
+            question: 'What should I do during a five-minute Pomodoro break?',
             answer:
-              'Step away from your task when possible. Stand up, stretch, refill your water, or rest your eyes instead of immediately opening another distracting screen.',
+              'Move away from the task. Stand, stretch, drink water, look into the distance, or take a short walk. Pick an activity that is easy to stop when the next session begins.',
           },
           {
-            question: 'What if 25 minutes is too long?',
+            question: 'What if 25 minutes feels too long?',
             answer:
-              'Start with 10 or 15 minutes. The goal is to make beginning easier, not to force yourself through an interval that does not work for you.',
+              'Start with 10 or 15 minutes and keep the break deliberate. Increase the focus period once beginning feels easier. A shorter completed session is more useful than a 25-minute plan you avoid starting.',
           },
           {
-            question: 'Can I use music while doing Pomodoro?',
+            question: 'Can I use the Pomodoro Technique for studying?',
             answer:
-              'Yes, if it helps you settle in without repeatedly pulling your attention away. Responses to background music vary by person and task, so compare how you feel and work with music, ambient sound, and silence.',
+              'Yes. Define the study action — for example, “answer practice questions 1–10” rather than “study chemistry.” During the break, move away from the material instead of switching to another demanding subject.',
+          },
+          {
+            question: 'Can I listen to music during a Pomodoro?',
+            answer:
+              'If music helps you stay with the task, use something familiar and non-distracting. Lyrics may interfere with reading or writing for some people. Ambient sound is a simple alternative when you want a steady background without another source of language.',
           },
         ],
       },
       {
         type: 'cta',
-        heading: 'Choose your focus space and begin one session.',
+        heading: 'Set up your space, choose one task, and begin one session.',
         buttonText: 'Start focusing',
         buttonHref: '/',
       },
