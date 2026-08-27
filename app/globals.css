@@ -16,13 +16,77 @@
   font-display: swap;
 }
 
+/* Self-hosted (was cdn.jsdelivr.net/npm/pretendard) — same weight files, same
+   origin as everything else, so no extra DNS/TLS round trip on first paint. */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Thin.woff2') format('woff2');
+  font-weight: 100;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-ExtraLight.woff2') format('woff2');
+  font-weight: 200;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-ExtraBold.woff2') format('woff2');
+  font-weight: 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pretendard';
+  src: url('/fonts/Pretendard-Black.woff2') format('woff2');
+  font-weight: 900;
+  font-display: swap;
+}
+
 @theme {
   --font-aspekta: 'Aspekta', sans-serif;
   --font-din-condensed: 'DIN Condensed', sans-serif;
   --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-dm: 'DM Sans', sans-serif;
-  --font-inter: 'Inter', sans-serif;
-  --font-mono: 'Roboto Mono', monospace;
+}
+
+@theme inline {
+  /* DM Sans / Inter / Roboto Mono are only used on the marketing/blog routes
+     (see components/Nav.tsx, Hero.tsx, Section2.tsx, Footer.tsx) — loaded via
+     next/font/google there (app/blog/layout.tsx, app/updates/layout.tsx,
+     app/about/page.tsx) so the timer app itself never pays for them. */
+  --font-dm: var(--next-font-dm), sans-serif;
+  --font-inter: var(--next-font-inter), sans-serif;
+  --font-mono: var(--next-font-mono), monospace;
 }
 
 *,

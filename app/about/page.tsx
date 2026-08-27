@@ -6,6 +6,7 @@ import Section1 from '@/components/Section1'
 import Section2 from '@/components/Section2'
 import Section3 from '@/components/Section3'
 import Footer from '@/components/Footer'
+import { dmSans, inter, robotoMono } from '@/lib/fonts'
 
 export const metadata: Metadata = {
   title: 'About – A Focus Timer That Belongs on Your Desk',
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <main className="bg-[#F6F6F3]">
+    <main className={`bg-[#F6F6F3] ${dmSans.variable} ${inter.variable} ${robotoMono.variable}`}>
       <Nav />
       <Hero />
       <Section2 />
